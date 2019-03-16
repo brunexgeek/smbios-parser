@@ -5,6 +5,8 @@
 
 #define DMI_READ_8U    *ptr_++
 #define DMI_READ_16U   *((uint16_t*)ptr_), ptr_ += 2
+#define DMI_READ_32U   *((uint32_t*)ptr_), ptr_ += 4
+#define DMI_READ_64U   *((uint64_t*)ptr_), ptr_ += 8
 #define DMI_ENTRY_HEADER_SIZE   4
 
 namespace dmi {
@@ -18,6 +20,8 @@ Parser::Parser( const uint8_t *data, size_t size ) : data_(data), size_(size), p
 
 const char *Parser::getString( int index ) const
 {
+    if (index <= 0) return NULL;
+
     const char *ptr = (const char*) start_ + (size_t) entry_.length - DMI_ENTRY_HEADER_SIZE;
     for (int i = 1; i < index; ++i)
     {
@@ -185,6 +189,50 @@ const Entry *Parser::parseEntry()
         entry_.data.sysinfo.SerialNumber = getString(entry_.data.sysinfo.SerialNumber_);
         entry_.data.sysinfo.SKUNumber    = getString(entry_.data.sysinfo.SKUNumber_);
         entry_.data.sysinfo.Family       = getString(entry_.data.sysinfo.Family_);
+    }
+    else
+    if (entry_.type == DMI_TYPE_PHYSMEM)
+    {
+        // 2.1+
+        entry_.data.physmem.Location = DMI_READ_8U;
+        entry_.data.physmem.Use = DMI_READ_8U;
+        entry_.data.physmem.ErrorCorrection = DMI_READ_8U;
+        entry_.data.physmem.MaximumCapacity = DMI_READ_32U;
+        entry_.data.physmem.ErrorInformationHandle = DMI_READ_16U;
+        entry_.data.physmem.NumberDevices = DMI_READ_16U;
+        // 2.7+
+        entry_.data.physmem.ExtendedMaximumCapacity = DMI_READ_64U;
+    }
+    else
+    if (entry_.type == DMI_TYPE_MEMORY)
+    {
+        // 2.1+
+        entry_.data.memory.PhysicalArrayHandle = DMI_READ_16U;
+        entry_.data.memory.ErrorInformationHandle = DMI_READ_16U;
+        entry_.data.memory.TotalWidth = DMI_READ_16U;
+        entry_.data.memory.DataWidth = DMI_READ_16U;
+        entry_.data.memory.Size = DMI_READ_16U;
+        entry_.data.memory.FormFactor = DMI_READ_8U;
+        entry_.data.memory.DeviceSet = DMI_READ_8U;
+        entry_.data.memory.DeviceLocator_ = DMI_READ_8U;
+        entry_.data.memory.BankLocator_ = DMI_READ_8U;
+        entry_.data.memory.MemoryType = DMI_READ_8U;
+        entry_.data.memory.TypeDetail = DMI_READ_16U;
+        entry_.data.memory.Speed = DMI_READ_16U;
+        entry_.data.memory.Manufacturer_ = DMI_READ_8U;
+        entry_.data.memory.SerialNumber_ = DMI_READ_8U;
+        entry_.data.memory.AssetTagNumber_ = DMI_READ_8U;
+        entry_.data.memory.PartNumber_ = DMI_READ_8U;
+        entry_.data.memory.Attributes = DMI_READ_8U;
+        // 2.7+
+        entry_.data.memory.ExtendedSize = DMI_READ_32U;
+
+        entry_.data.memory.DeviceLocator  = getString(entry_.data.memory.DeviceLocator_);
+        entry_.data.memory.BankLocator    = getString(entry_.data.memory.BankLocator_);
+        entry_.data.memory.Manufacturer   = getString(entry_.data.memory.Manufacturer_);
+        entry_.data.memory.SerialNumber   = getString(entry_.data.memory.SerialNumber_);
+        entry_.data.memory.AssetTagNumber = getString(entry_.data.memory.AssetTagNumber_);
+        entry_.data.memory.PartNumber     = getString(entry_.data.memory.PartNumber_);
     }
 
     return &entry_;

@@ -12,6 +12,8 @@
 #define DMI_TYPE_BASEBOARD    2
 #define DMI_TYPE_SYSENCLOSURE 3
 #define DMI_TYPE_PROCESSOR    4
+#define DMI_TYPE_PHYSMEM      16
+#define DMI_TYPE_MEMORY       17
 
 
 namespace dmi {
@@ -129,6 +131,50 @@ struct TypeProcessor
 };
 
 
+struct TypePhysicalMemory
+{
+    // 2.1+
+    uint8_t Location;
+    uint8_t Use;
+    uint8_t ErrorCorrection;
+    uint32_t MaximumCapacity;
+    uint16_t ErrorInformationHandle;
+    uint16_t NumberDevices;
+    // 2.7+
+    uint64_t ExtendedMaximumCapacity;
+};
+
+
+struct TypeMemoryDevice
+{
+    // 2.1+
+    uint16_t PhysicalArrayHandle;
+    uint16_t ErrorInformationHandle;
+    uint16_t TotalWidth;
+    uint16_t DataWidth;
+    uint16_t Size;
+    uint8_t FormFactor;
+    uint8_t DeviceSet;
+    uint8_t DeviceLocator_;
+    const char *DeviceLocator;
+    uint8_t BankLocator_;
+    const char *BankLocator;
+    uint8_t MemoryType;
+    uint16_t TypeDetail;
+    uint16_t Speed;
+    uint8_t Manufacturer_;
+    const char *Manufacturer;
+    uint8_t SerialNumber_;
+    const char *SerialNumber;
+    uint8_t AssetTagNumber_;
+	const char* AssetTagNumber;
+    uint8_t PartNumber_;
+	const char* PartNumber;
+    uint8_t Attributes;
+    // 2.7+
+    uint32_t ExtendedSize;
+};
+
 struct Entry
 {
     uint8_t type;
@@ -141,6 +187,8 @@ struct Entry
         TypeSysInfo sysinfo;
         TypeBios bios;
         TypeSystemEnclosure sysenclosure;
+        TypePhysicalMemory physmem;
+        TypeMemoryDevice memory;
     } data;
 };
 

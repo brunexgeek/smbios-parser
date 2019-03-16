@@ -122,6 +122,24 @@ int main(int argc, char ** argv)
                 printf("%02X ", entry->data.processor.ProcessorID[i]);
             printf("\n\n");
         }
+        else
+        if (entry->type == DMI_TYPE_PHYSMEM)
+        {
+            printf("      MaximumCapacity: %d KiB\n", entry->data.physmem.MaximumCapacity);
+            printf("   ExtMaximumCapacity: %lu KiB\n\n", entry->data.physmem.ExtendedMaximumCapacity);
+        }
+        else
+        if (entry->type == DMI_TYPE_MEMORY)
+        {
+            printf("        DeviceLocator: %s\n", entry->data.memory.DeviceLocator);
+            printf("          BankLocator: %s\n", entry->data.memory.BankLocator);
+            printf("         Manufacturer: %s\n", entry->data.memory.Manufacturer);
+            printf("         SerialNumber: %s\n", entry->data.memory.SerialNumber);
+            printf("       AssetTagNumber: %s\n", entry->data.memory.AssetTagNumber);
+            printf("           PartNumber: %s\n", entry->data.memory.PartNumber);
+            printf("                 Size: %d MiB\n", entry->data.memory.Size);
+            printf("         ExtendedSize: %lu MiB\n\n", entry->data.memory.ExtendedSize);
+        }
     }
 
     return 0;
