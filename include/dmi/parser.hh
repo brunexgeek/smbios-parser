@@ -16,6 +16,25 @@
 namespace dmi {
 
 
+struct TypeBios
+{
+	uint8_t Vendor_;
+	const char *Vendor;
+	uint8_t BIOSVersion_;
+	const char *BIOSVersion;
+	uint16_t BIOSStartingSegment;
+	uint8_t BIOSReleaseDate_;
+	const char *BIOSReleaseDate;
+	uint8_t BIOSROMSize;
+	uint8_t BIOSCharacteristics[8];
+	uint8_t ExtensionByte1;
+	uint8_t ExtensionByte2;
+	uint8_t SystemBIOSMajorRelease;
+	uint8_t SystemBIOSMinorRelease;
+	uint8_t EmbeddedFirmwareMajorRelease;
+	uint8_t EmbeddedFirmwareMinorRelease;
+};
+
 struct TypeSysInfo
 {
 	uint8_t Manufacturer_;
@@ -96,6 +115,7 @@ struct Entry
         TypeProcessor processor;
         TypeBaseboard baseboard;
         TypeSysInfo sysinfo;
+        TypeBios bios;
     } data;
 };
 

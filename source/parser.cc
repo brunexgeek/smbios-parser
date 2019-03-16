@@ -63,6 +63,26 @@ const Entry *Parser::parseEntry()
 {
     std::vector<const char *> strings;
 
+    if (entry_.type == DMI_TYPE_BIOS)
+    {
+        entry_.data.bios.Vendor_ = DMI_READ_8U;
+        entry_.data.bios.BIOSVersion_ = DMI_READ_8U;
+        entry_.data.bios.BIOSStartingSegment = DMI_READ_16U;
+        entry_.data.bios.BIOSReleaseDate_ = DMI_READ_8U;
+        entry_.data.bios.BIOSROMSize = DMI_READ_8U;
+        for (size_t i = 0; i < 8; ++i)
+            entry_.data.bios.BIOSCharacteristics[i] = DMI_READ_8U;
+        entry_.data.bios.ExtensionByte1 = DMI_READ_8U;
+        entry_.data.bios.ExtensionByte2 = DMI_READ_8U;
+        entry_.data.bios.SystemBIOSMajorRelease = DMI_READ_8U;
+        entry_.data.bios.SystemBIOSMinorRelease = DMI_READ_8U;
+        entry_.data.bios.EmbeddedFirmwareMajorRelease = DMI_READ_8U;
+        entry_.data.bios.EmbeddedFirmwareMinorRelease = DMI_READ_8U;
+
+        entry_.data.bios.Vendor          = getString(entry_.data.bios.Vendor_);
+        entry_.data.bios.BIOSVersion     = getString(entry_.data.bios.BIOSVersion_);
+        entry_.data.bios.BIOSReleaseDate = getString(entry_.data.bios.BIOSReleaseDate_);
+    }
     if (entry_.type == DMI_TYPE_PROCESSOR)
     {
         // version 2.0

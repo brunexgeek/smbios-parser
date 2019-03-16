@@ -74,14 +74,24 @@ int main(int argc, char ** argv)
         if (entry == NULL) break;
         printf("Handle 0x%04X, DMI Type %d, %d bytes\n", entry->handle, entry->type, entry->length);
 
+        if (entry->type == DMI_TYPE_BIOS)
+        {
+            printf("           Vendor: %s\n", entry->data.bios.Vendor);
+            printf("      BIOSVersion: %s\n", entry->data.bios.BIOSVersion);
+            printf("  BIOSReleaseDate: %s\n\n", entry->data.bios.BIOSReleaseDate);
+        }
+        else
         if (entry->type == DMI_TYPE_SYSINFO)
         {
             printf("     Manufacturer: %s\n", entry->data.sysinfo.Manufacturer);
             printf("      ProductName: %s\n", entry->data.sysinfo.ProductName);
             printf("          Version: %s\n", entry->data.sysinfo.Version);
-            printf("     SerialNumber: %s\n", entry->data.sysinfo.SerialNumber);
+            printf("             UUID: ");
+            for (size_t i = 0; i < 16; ++i)
+                printf("%02X ", entry->data.sysinfo.UUID[i]);
+            printf("\n");
             printf("        SKUNumber: %s\n", entry->data.sysinfo.SKUNumber);
-            printf("           Family: %s\n", entry->data.sysinfo.Family);
+            printf("           Family: %s\n\n", entry->data.sysinfo.Family);
         }
         else
         if (entry->type == DMI_TYPE_BASEBOARD)
@@ -91,13 +101,18 @@ int main(int argc, char ** argv)
             printf("          Version: %s\n", entry->data.baseboard.Version);
             printf("     SerialNumber: %s\n", entry->data.baseboard.SerialNumber);
             printf("         AssetTag: %s\n", entry->data.baseboard.AssetTag);
-            printf("LocationInChassis: %s\n", entry->data.baseboard.LocationInChassis);
+            printf("LocationInChassis: %s\n\n", entry->data.baseboard.LocationInChassis);
         }
         else
         if (entry->type == DMI_TYPE_PROCESSOR)
         {
-            printf("     Manufacturer: %s\n", entry->data.processor.ProcessorManufacturer);
-            printf("          Version: %s\n", entry->data.processor.ProcessorVersion);
+            printf("    SocketDesignation: %s\n", entry->data.processor.SocketDesignation);
+            printf("ProcessorManufacturer: %s\n", entry->data.processor.ProcessorManufacturer);
+            printf("     ProcessorVersion: %s\n", entry->data.processor.ProcessorVersion);
+            printf("          ProcessorID: ");
+            for (size_t i = 0; i < 8; ++i)
+                printf("%02X ", entry->data.processor.ProcessorID[i]);
+            printf("\n\n");
         }
     }
 
