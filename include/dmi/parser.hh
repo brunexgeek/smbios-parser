@@ -10,6 +10,7 @@
 #define DMI_TYPE_BIOS         0
 #define DMI_TYPE_SYSINFO      1
 #define DMI_TYPE_BASEBOARD    2
+#define DMI_TYPE_SYSENCLOSURE 3
 #define DMI_TYPE_PROCESSOR    4
 
 
@@ -76,6 +77,29 @@ struct TypeBaseboard
 };
 
 
+struct TypeSystemEnclosure
+{
+	uint8_t Manufacturer_;
+	const char *Manufacturer;
+	uint8_t Type;
+	uint8_t Version_;
+	const char *Version;
+	uint8_t SerialNumber_;
+	const char *SerialNumber;
+	uint8_t AssetTag_;
+	const char *AssetTag;
+	uint8_t BootupState;
+	uint8_t PowerSupplyState;
+	uint8_t ThermalState;
+	uint8_t SecurityStatus;
+	uint16_t OEMdefined;
+	uint8_t Height;
+	uint8_t NumberOfPowerCords;
+	uint8_t ContainedElementCount;
+	uint8_t ContainedElementRecordLength;
+};
+
+
 struct TypeProcessor
 {
 	uint8_t SocketDesignation_;
@@ -116,6 +140,7 @@ struct Entry
         TypeBaseboard baseboard;
         TypeSysInfo sysinfo;
         TypeBios bios;
+        TypeSystemEnclosure sysenclosure;
     } data;
 };
 

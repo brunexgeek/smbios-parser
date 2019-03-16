@@ -74,6 +74,14 @@ int main(int argc, char ** argv)
         if (entry == NULL) break;
         printf("Handle 0x%04X, DMI Type %d, %d bytes\n", entry->handle, entry->type, entry->length);
 
+        if (entry->type == DMI_TYPE_SYSENCLOSURE)
+        {
+            printf("     Manufacturer: %s\n", entry->data.sysenclosure.Manufacturer);
+            printf("          Version: %s\n", entry->data.sysenclosure.Version);
+            printf("     SerialNumber: %s\n", entry->data.sysenclosure.SerialNumber);
+            printf("         AssetTag: %s\n\n", entry->data.sysenclosure.AssetTag);
+        }
+        else
         if (entry->type == DMI_TYPE_BIOS)
         {
             printf("           Vendor: %s\n", entry->data.bios.Vendor);

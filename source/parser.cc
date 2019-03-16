@@ -83,6 +83,29 @@ const Entry *Parser::parseEntry()
         entry_.data.bios.BIOSVersion     = getString(entry_.data.bios.BIOSVersion_);
         entry_.data.bios.BIOSReleaseDate = getString(entry_.data.bios.BIOSReleaseDate_);
     }
+    else
+    if (entry_.type == DMI_TYPE_SYSENCLOSURE)
+    {
+        entry_.data.sysenclosure.Manufacturer_ = DMI_READ_8U;
+        entry_.data.sysenclosure.Type = DMI_READ_8U;
+        entry_.data.sysenclosure.Version_ = DMI_READ_8U;
+        entry_.data.sysenclosure.SerialNumber_ = DMI_READ_8U;
+        entry_.data.sysenclosure.AssetTag_ = DMI_READ_8U;
+        entry_.data.sysenclosure.BootupState = DMI_READ_8U;
+        entry_.data.sysenclosure.PowerSupplyState = DMI_READ_8U;
+        entry_.data.sysenclosure.ThermalState = DMI_READ_8U;
+        entry_.data.sysenclosure.SecurityStatus = DMI_READ_8U;
+        entry_.data.sysenclosure.OEMdefined = DMI_READ_16U;
+        entry_.data.sysenclosure.Height = DMI_READ_8U;
+        entry_.data.sysenclosure.NumberOfPowerCords = DMI_READ_8U;
+        entry_.data.sysenclosure.ContainedElementCount = DMI_READ_8U;
+        entry_.data.sysenclosure.ContainedElementRecordLength = DMI_READ_8U;
+
+        entry_.data.sysenclosure.Manufacturer = getString(entry_.data.sysenclosure.Manufacturer_);
+        entry_.data.sysenclosure.Version      = getString(entry_.data.sysenclosure.Version_);
+        entry_.data.sysenclosure.SerialNumber = getString(entry_.data.sysenclosure.SerialNumber_);
+        entry_.data.sysenclosure.AssetTag     = getString(entry_.data.sysenclosure.AssetTag_);
+    }
     if (entry_.type == DMI_TYPE_PROCESSOR)
     {
         // version 2.0
