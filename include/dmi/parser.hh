@@ -8,23 +8,66 @@
 
 
 #define DMI_TYPE_BIOS         0
+#define DMI_TYPE_SYSINFO      1
+#define DMI_TYPE_BASEBOARD    2
 #define DMI_TYPE_PROCESSOR    4
 
 
 namespace dmi {
 
 
-struct Processor
+struct TypeSysInfo
+{
+	uint8_t Manufacturer_;
+	const char* Manufacturer;
+	uint8_t ProductName_;
+	const char* ProductName;
+	uint8_t Version_;
+	const char* Version;
+	uint8_t SerialNumber_;
+	const char* SerialNumber;
+	uint8_t UUID[16];
+	uint8_t WakeupType;
+	uint8_t SKUNumber_;
+    const char* SKUNumber;
+	uint8_t Family_;
+	const char* Family;
+};
+
+
+struct TypeBaseboard
+{
+	uint8_t Manufacturer_;
+    const char *Manufacturer;
+	uint8_t ProductName_;
+    const char *ProductName;
+	uint8_t Version_;
+    const char *Version;
+	uint8_t SerialNumber_;
+    const char *SerialNumber;
+	uint8_t AssetTag_;
+    const char *AssetTag;
+	uint8_t FeatureFlags;
+	uint8_t LocationInChassis_;
+    const char *LocationInChassis;
+	uint16_t ChassisHandle;
+	uint8_t BoardType;
+	uint8_t NoOfContainedObjectHandles;
+	uint16_t *ContainedObjectHandles;
+};
+
+
+struct TypeProcessor
 {
 	uint8_t SocketDesignation_;
-    char* SocketDesignation;
+    const char* SocketDesignation;
 	uint8_t ProcessorType;
 	uint8_t ProcessorFamily;
 	uint8_t ProcessorManufacturer_;
-    char* ProcessorManufacturer;
+    const char* ProcessorManufacturer;
 	uint8_t ProcessorID[8];
 	uint8_t ProcessorVersion_;
-    char* ProcessorVersion;
+    const char* ProcessorVersion;
 	uint8_t Voltage;
 	uint16_t ExternalClock;
 	uint16_t MaxSpeed;
@@ -35,11 +78,11 @@ struct Processor
 	uint16_t L2CacheHandle;
 	uint16_t L3CacheHandle;
 	uint8_t SerialNumber_;
-	char* SerialNumber;
+	const char* SerialNumber;
     uint8_t AssetTagNumber_;
-	char* AssetTagNumber;
+	const char* AssetTagNumber;
     uint8_t PartNumber_;
-	char* PartNumber;
+	const char* PartNumber;
 };
 
 
@@ -50,7 +93,9 @@ struct Entry
 	uint16_t handle;
     union
     {
-        Processor processor;
+        TypeProcessor processor;
+        TypeBaseboard baseboard;
+        TypeSysInfo sysinfo;
     } data;
 };
 
@@ -58,20 +103,18 @@ struct Entry
 class Parser
 {
     public:
-        Parser( const uint8_t *data, size_t size ) : data(data), size(size), ptr(NULL)
-        {
-        }
-
+        Parser( const uint8_t *data, size_t size );
         const Entry *next();
 
     private:
-        const uint8_t *data;
-        size_t size;
-        Entry entry;
-        const uint8_t *ptr;
-        const uint8_t *start;
+        const uint8_t *data_;
+        size_t size_;
+        Entry entry_;
+        const uint8_t *ptr_;
+        const uint8_t *start_;
 
         const Entry *parseEntry();
+        const char *getString( int index ) const;
 };
 
 
