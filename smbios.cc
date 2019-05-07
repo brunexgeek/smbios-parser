@@ -1,4 +1,4 @@
-#include <dmi/parser.hh>
+#include "smbios.hh"
 #include <vector>
 #include <stdio.h>
 

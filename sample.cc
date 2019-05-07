@@ -2,7 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <sys/stat.h>
-#include <dmi/parser.hh>
+#include "smbios.hh"
 
 
 #ifdef _WIN32
