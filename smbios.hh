@@ -16,7 +16,7 @@
 #define DMI_TYPE_MEMORY       17
 
 
-namespace dmi {
+namespace smbios {
 
 
 struct TypeBios
@@ -197,6 +197,7 @@ class Parser
 {
     public:
         Parser( const uint8_t *data, size_t size );
+        void reset();
         const Entry *next();
 
     private:
@@ -211,7 +212,7 @@ class Parser
 };
 
 
-} // namespace dmi
+} // namespace smbios
 
 
 #undef DMI_READ_8U

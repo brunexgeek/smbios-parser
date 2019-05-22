@@ -9,13 +9,13 @@
 #define DMI_READ_64U   *((uint64_t*)ptr_), ptr_ += 8
 #define DMI_ENTRY_HEADER_SIZE   4
 
-namespace dmi {
+namespace smbios {
 
 
 Parser::Parser( const uint8_t *data, size_t size ) : data_(data), size_(size), ptr_(NULL)
 {
+    reset();
 }
-
 
 
 const char *Parser::getString( int index ) const
@@ -31,6 +31,13 @@ const char *Parser::getString( int index ) const
     }
     return ptr;
 }
+
+
+void Parser::reset()
+{
+    ptr_ = start_ = NULL;
+}
+
 
 const Entry *Parser::next()
 {
@@ -239,4 +246,4 @@ const Entry *Parser::parseEntry()
     //return NULL;
 }
 
-} // namespace dmi
+} // namespace smbios

@@ -1,2 +1,3 @@
-# dmi-parser
-Small C++ library to parse DMI table
+# smbios-parser
+
+Small C++ library to parse SMBIOS information
