@@ -1,3 +1,20 @@
+/*
+ * Copyright 2019 Bruno Ribeiro
+ * https://github.com/brunexgeek/smbios-parser
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef DMI_PARSER_HH
 #define DMI_PARSER_HH
 
@@ -16,20 +33,17 @@
 #define DMI_TYPE_PHYSMEM      16
 #define DMI_TYPE_MEMORY       17
 
-#define SMBIOS_STRING(name)  uint8_t name##_; const char * name ;
+#define SMBIOS_STRING(name)  uint8_t name##_; const char * name
 
 namespace smbios {
 
 
 struct TypeBios
 {
-	uint8_t Vendor_;
-	const char *Vendor;
-	uint8_t BIOSVersion_;
-	const char *BIOSVersion;
+	SMBIOS_STRING(Vendor);
+	SMBIOS_STRING(BIOSVersion);
 	uint16_t BIOSStartingSegment;
-	uint8_t BIOSReleaseDate_;
-	const char *BIOSReleaseDate;
+	SMBIOS_STRING(BIOSReleaseDate);
 	uint8_t BIOSROMSize;
 	uint8_t BIOSCharacteristics[8];
 	uint8_t ExtensionByte1;
@@ -43,41 +57,29 @@ struct TypeBios
 struct TypeSysInfo
 {
 	// 2.0+
-	uint8_t Manufacturer_;
-	const char* Manufacturer;
-	uint8_t ProductName_;
-	const char* ProductName;
-	uint8_t Version_;
-	const char* Version;
-	uint8_t SerialNumber_;
-	const char* SerialNumber;
+	SMBIOS_STRING(Manufacturer);
+	SMBIOS_STRING(ProductName);
+	SMBIOS_STRING(Version);
+	SMBIOS_STRING(SerialNumber);
 	// 2.1+
 	uint8_t UUID[16];
 	uint8_t WakeupType;
 	// 2.4+
-	uint8_t SKUNumber_;
-    const char* SKUNumber;
-	uint8_t Family_;
-	const char* Family;
+	SMBIOS_STRING(SKUNumber);
+	SMBIOS_STRING(Family);
 };
 
 
 struct TypeBaseboard
 {
 	// 2.0+
-	uint8_t Manufacturer_;
-    const char *Manufacturer;
-	uint8_t Product_;
-    const char *Product;
-	uint8_t Version_;
-    const char *Version;
-	uint8_t SerialNumber_;
-    const char *SerialNumber;
-	uint8_t AssetTag_;
-    const char *AssetTag;
+	SMBIOS_STRING(Manufacturer);
+	SMBIOS_STRING(Product);
+	SMBIOS_STRING(Version);
+	SMBIOS_STRING(SerialNumber);
+	SMBIOS_STRING(AssetTag);
 	uint8_t FeatureFlags;
-	uint8_t LocationInChassis_;
-    const char *LocationInChassis;
+	SMBIOS_STRING(LocationInChassis);
 	uint16_t ChassisHandle;
 	uint8_t BoardType;
 	uint8_t NoOfContainedObjectHandles;
@@ -88,15 +90,11 @@ struct TypeBaseboard
 struct TypeSystemEnclosure
 {
 	// 2.0+
-	uint8_t Manufacturer_;
-	const char *Manufacturer;
+	SMBIOS_STRING(Manufacturer);
 	uint8_t Type;
-	uint8_t Version_;
-	const char *Version;
-	uint8_t SerialNumber_;
-	const char *SerialNumber;
-	uint8_t AssetTag_;
-	const char *AssetTag;
+	SMBIOS_STRING(Version);
+	SMBIOS_STRING(SerialNumber);
+	SMBIOS_STRING(AssetTag);
 	// 2.1+
 	uint8_t BootupState;
 	uint8_t PowerSupplyState;
@@ -110,23 +108,19 @@ struct TypeSystemEnclosure
 	uint8_t ContainedElementRecordLength;
 	const uint8_t *ContainedElements;
 	// 2.7+
-	uint8_t SKUNumber_;
-	const char *SKUNumber;
+	SMBIOS_STRING(SKUNumber);
 };
 
 
 struct TypeProcessor
 {
 	// 2.0+
-	uint8_t SocketDesignation_;
-    const char* SocketDesignation;
+	SMBIOS_STRING(SocketDesignation);
 	uint8_t ProcessorType;
 	uint8_t ProcessorFamily;
-	uint8_t ProcessorManufacturer_;
-    const char* ProcessorManufacturer;
+	SMBIOS_STRING(ProcessorManufacturer);
 	uint8_t ProcessorID[8];
-	uint8_t ProcessorVersion_;
-    const char* ProcessorVersion;
+	SMBIOS_STRING(ProcessorVersion);
 	uint8_t Voltage;
 	uint16_t ExternalClock;
 	uint16_t MaxSpeed;
@@ -138,12 +132,9 @@ struct TypeProcessor
 	uint16_t L2CacheHandle;
 	uint16_t L3CacheHandle;
 	// 2.3+
-	uint8_t SerialNumber_;
-	const char* SerialNumber;
-    uint8_t AssetTagNumber_;
-	const char* AssetTagNumber;
-    uint8_t PartNumber_;
-	const char* PartNumber;
+	SMBIOS_STRING(SerialNumber);
+    SMBIOS_STRING(AssetTagNumber);
+    SMBIOS_STRING(PartNumber);
 	// 2.5+
 	uint8_t CoreCount;
 	uint8_t CoreEnabled;
