@@ -25,45 +25,47 @@
 
 #ifdef _WIN32
 
-void getDMI( std::vector<uint8_t> &buffer )
+bool getDMI( std::vector<uint8_t> &buffer )
 {
-    DWORD error = ERROR_SUCCESS;
-    DWORD smBiosDataSize = 0;
-    RawSMBIOSData* smBiosData = NULL; // Defined in this link
-    DWORD bytesWritten = 0;
-
-    // Query size of SMBIOS data.
-    smBiosDataSize = GetSystemFirmwareTable('RSMB', 0, NULL, 0);
-
-    // Allocate memory for SMBIOS data
-    smBiosData = (RawSMBIOSData*) HeapAlloc(GetProcessHeap(), 0, smBiosDataSize);
-    if (!smBiosData) {
-        error = ERROR_OUTOFMEMORY;
-        goto exit;
+    // get the size of SMBIOS table
+    DWORD size = GetSystemFirmwareTable('RSMB', 0, NULL, 0);
+    if (size == 0) return false;
+    buffer.resize(size, 0);
+    // retrieve the SMBIOS table
+    if (size != GetSystemFirmwareTable('RSMB', 0, buffer.data(), size))
+    {
+        buffer.clear();
+        return false;
     }
-
-    // Retrieve the SMBIOS table
-    bytesWritten = GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
-
-    if (bytesWritten != smBiosDataSize) {
-        error = ERROR_INVALID_DATA;
-        goto exit;
-    }
+    return true;
 }
 
 #else
 
-bool getDMI( const std::string &fileName, std::vector<uint8_t> &buffer )
+bool getDMI( const std::string &path, std::vector<uint8_t> &buffer )
 {
+    std::ifstream input;
+    std::string fileName;
+
+    // get the SMBIOS structures size
+    fileName = path +  "/DMI";
     struct stat info;
     if (stat(fileName.c_str(), &info) != 0) return false;
-    buffer.resize(info.st_size);
+    buffer.resize(info.st_size + 32);
 
-    std::ifstream input(fileName.c_str(), std::ios_base::binary);
+    // read SMBIOS structures
+    input.open(fileName.c_str(), std::ios_base::binary);
     if (!input.good()) return false;
-
-    input.read((char*) buffer.data(), info.st_size);
+    input.read((char*) buffer.data() + 32, info.st_size);
     input.close();
+
+    // read SMBIOS entry point
+    fileName = path + "/smbios_entry_point";
+    input.open(fileName.c_str(), std::ios_base::binary);
+    if (!input.good()) return false;
+    input.read((char*) buffer.data(), 32);
+    input.close();
+
     return true;
 }
 
@@ -154,8 +156,8 @@ bool printSMBIOS(
             }
             if (version >= smbios::SMBIOS_2_3)
             {
-                output << "  Contained Count:" << (int) entry->data.sysenclosure.ContainedElementCount << '\n';
-                output << " Contained Length:" << (int) entry->data.sysenclosure.ContainedElementRecordLength << '\n';
+                output << "  Contained Count: " << (int) entry->data.sysenclosure.ContainedElementCount << '\n';
+                output << " Contained Length: " << (int) entry->data.sysenclosure.ContainedElementRecordLength << '\n';
             }
             if (version >= smbios::SMBIOS_2_7)
             {
@@ -254,12 +256,12 @@ int main(int argc, char ** argv)
 
     std::vector<uint8_t> buffer;
     #ifdef _WIN32
-    getDMI(buffer);
+    if (!getDMI(buffer)) return 1;
     #else
     if (argc != 2) return 1;
     if (!getDMI(argv[1], buffer)) return 1;
     #endif
-    smbios::Parser parser(&buffer.front(), buffer.size(), smbios::SMBIOS_2_8);
+    smbios::Parser parser(&buffer.front(), buffer.size());
     printSMBIOS(parser, std::cout);
 
     return 0;

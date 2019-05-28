@@ -29,10 +29,27 @@
 namespace smbios {
 
 
-Parser::Parser( const uint8_t *data, size_t size, int version ) : data_(data), size_(size),
+Parser::Parser( const uint8_t *data, size_t size, int version ) : data_(data + 32), size_(size),
     ptr_(NULL), version_(version)
 {
+    int vn = 0;
+
+    // have valid SMBIOS entry point?
+    if (data[0] != '_' || data[1] != 'S' || data[2] != 'M' || data[3] != '_') goto INVALID_DATA;
+    if (data[10] != 0) goto INVALID_DATA;
+    if (data[16] != '_' || data[17] != 'D' || data[18] != 'M' || data[19] != 'I' || data[20] != '_') goto INVALID_DATA;
+    if (data[5] != 0x1F) goto INVALID_DATA;
+    // get the SMBIOS version
+    vn = data[6] << 8 | data[7];
+    if (version_ == 0) version_ = SMBIOS_3_0;
+    if (version_ > vn) version_ = vn;
+    // is a valid version?
+    if ((version_ < SMBIOS_2_0 || version_ > SMBIOS_2_8) && version_ != SMBIOS_3_0 ) goto INVALID_DATA;
     reset();
+    return;
+
+INVALID_DATA:
+    data_ = ptr_ = start_ = nullptr;
 }
 
 
@@ -86,7 +103,7 @@ const Entry *Parser::next()
 
     if (entry_.type == 127)
     {
-        ptr_ = start_ = NULL;
+        reset();
         return NULL;
     }
 
@@ -395,12 +412,18 @@ const Entry *Parser::parseEntry()
     }
 
     return &entry_;
-    //return NULL;
 }
 
 int Parser::version() const
 {
     return version_;
 }
+
+
+bool Parser::valid() const
+{
+    return data_ != nullptr;
+}
+
 
 } // namespace smbios

@@ -37,7 +37,7 @@
 
 namespace smbios {
 
-
+// DMI_TYPE_BIOS
 struct TypeBios
 {
 	SMBIOS_STRING(Vendor);
@@ -54,6 +54,7 @@ struct TypeBios
 	uint8_t EmbeddedFirmwareMinorRelease;
 };
 
+// DMI_TYPE_SYSINFO
 struct TypeSysInfo
 {
 	// 2.0+
@@ -69,7 +70,7 @@ struct TypeSysInfo
 	SMBIOS_STRING(Family);
 };
 
-
+// DMI_TYPE_BASEBOARD
 struct TypeBaseboard
 {
 	// 2.0+
@@ -86,7 +87,7 @@ struct TypeBaseboard
 	uint16_t *ContainedObjectHandles;
 };
 
-
+// DMI_TYPE_SYSENCLOSURE
 struct TypeSystemEnclosure
 {
 	// 2.0+
@@ -101,7 +102,7 @@ struct TypeSystemEnclosure
 	uint8_t ThermalState;
 	uint8_t SecurityStatus;
 	// 2.3+
-	uint16_t OEMdefined;
+	uint32_t OEMdefined;
 	uint8_t Height;
 	uint8_t NumberOfPowerCords;
 	uint8_t ContainedElementCount;
@@ -111,7 +112,7 @@ struct TypeSystemEnclosure
 	SMBIOS_STRING(SKUNumber);
 };
 
-
+// DMI_TYPE_PROCESSOR
 struct TypeProcessor
 {
 	// 2.0+
@@ -148,7 +149,7 @@ struct TypeProcessor
 	uint16_t ThreadCount2;
 };
 
-
+// DMI_TYPE_SYSSLOT
 struct SystemSlot
 {
 	// 2.0+
@@ -167,7 +168,7 @@ struct SystemSlot
 	uint8_t DeviceOrFunctionNumber;
 };
 
-
+// DMI_TYPE_PHYSMEM
 struct TypePhysicalMemory
 {
     // 2.1+
@@ -181,7 +182,7 @@ struct TypePhysicalMemory
     uint64_t ExtendedMaximumCapacity;
 };
 
-
+// DMI_TYPE_MEMORY
 struct TypeMemoryDevice
 {
     // 2.1+
@@ -236,6 +237,7 @@ enum SpecVersion
 {
 	SMBIOS_2_0 = 0x0200,
 	SMBIOS_2_1 = 0x0201,
+	SMBIOS_2_2 = 0x0202,
 	SMBIOS_2_3 = 0x0203,
 	SMBIOS_2_4 = 0x0204,
 	SMBIOS_2_5 = 0x0205,
@@ -249,10 +251,11 @@ enum SpecVersion
 class Parser
 {
     public:
-        Parser( const uint8_t *data, size_t size, int version );
+        Parser( const uint8_t *data, size_t size, int version = 0 );
         void reset();
         const Entry *next();
 		int version() const;
+		bool valid() const;
 
     private:
         const uint8_t *data_;
