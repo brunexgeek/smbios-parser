@@ -34,13 +34,37 @@ Parser::Parser( const uint8_t *data, size_t size, int version ) : data_(data + 3
 {
     int vn = 0;
 
-    // have valid SMBIOS entry point?
-    if (data[0] != '_' || data[1] != 'S' || data[2] != 'M' || data[3] != '_') goto INVALID_DATA;
-    if (data[10] != 0) goto INVALID_DATA;
-    if (data[16] != '_' || data[17] != 'D' || data[18] != 'M' || data[19] != 'I' || data[20] != '_') goto INVALID_DATA;
-    if (data[5] != 0x1F) goto INVALID_DATA;
-    // get the SMBIOS version
-    vn = data[6] << 8 | data[7];
+    // we have a valid SMBIOS entry point?
+    if (data[0] == '_' && data[1] == 'S' && data[2] == 'M' && data[3] == '_')
+    {
+        // version 2.x
+
+        // entry point length
+        if (data[5] != 0x1F) goto INVALID_DATA;
+        // entry point revision
+        if (data[10] != 0) goto INVALID_DATA;
+        // intermediate anchor string
+        if (data[16] != '_' || data[17] != 'D' || data[18] != 'M' || data[19] != 'I' || data[20] != '_') goto INVALID_DATA;
+
+        // get the SMBIOS version
+        vn = data[6] << 8 | data[7];
+    }
+    else
+    if (data[0] == '_' && data[1] == 'S' && data[2] == 'M' && data[3] == '3' && data[4] == '_')
+    {
+        // version 3.x
+
+        // entry point length
+        if (data[6] != 0x18) goto INVALID_DATA;
+        // entry point revision
+        if (data[10] != 0x01) goto INVALID_DATA;
+
+        // get the SMBIOS version
+        vn = data[7] << 8 | data[8];
+    }
+    else
+        goto INVALID_DATA;
+
     if (version_ == 0) version_ = SMBIOS_3_0;
     if (version_ > vn) version_ = vn;
     // is a valid version?
