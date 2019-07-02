@@ -29,12 +29,29 @@
 namespace smbios {
 
 
+#ifdef _WIN32
+
+#include <Windows.h>
+
+struct RawSMBIOSData
+{
+	BYTE    Used20CallingMethod;
+	BYTE    SMBIOSMajorVersion;
+	BYTE    SMBIOSMinorVersion;
+	BYTE    DmiRevision;
+	DWORD   Length;
+	BYTE    SMBIOSTableData[];
+};
+#endif
+
+
 Parser::Parser( const uint8_t *data, size_t size, int version ) : data_(data + 32), size_(size),
     ptr_(NULL), version_(version)
 {
     int vn = 0;
 
     // we have a valid SMBIOS entry point?
+    #ifndef _WIN32
     if (data[0] == '_' && data[1] == 'S' && data[2] == 'M' && data[3] == '_')
     {
         // version 2.x
@@ -64,6 +81,15 @@ Parser::Parser( const uint8_t *data, size_t size, int version ) : data_(data + 3
     }
     else
         goto INVALID_DATA;
+    #else
+    RawSMBIOSData *smBiosData = NULL;
+    smBiosData = (RawSMBIOSData *) data;
+
+    // get the SMBIOS version
+    vn = smBiosData->SMBIOSMajorVersion << 8 | smBiosData->SMBIOSMinorVersion;
+    data_ = smBiosData->SMBIOSTableData;
+    size_ = smBiosData->Length;
+    #endif
 
     if (version_ == 0) version_ = SMBIOS_3_0;
     if (version_ > vn) version_ = vn;

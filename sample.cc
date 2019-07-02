@@ -23,20 +23,30 @@
 #include "smbios.hh"
 
 
+
 #ifdef _WIN32
+
+#include <Windows.h>
+
+
 
 bool getDMI( std::vector<uint8_t> &buffer )
 {
+    const BYTE byteSignature[] = { 'B', 'M', 'S', 'R' };
+    const DWORD signature = *((DWORD*)byteSignature);
+
     // get the size of SMBIOS table
-    DWORD size = GetSystemFirmwareTable('RSMB', 0, NULL, 0);
+    DWORD size = GetSystemFirmwareTable(signature, 0, NULL, 0);
     if (size == 0) return false;
     buffer.resize(size, 0);
     // retrieve the SMBIOS table
-    if (size != GetSystemFirmwareTable('RSMB', 0, buffer.data(), size))
+
+    if (size != GetSystemFirmwareTable(Signature, 0, buffer.data(), size))
     {
         buffer.clear();
         return false;
     }
+
     return true;
 }
 
@@ -252,8 +262,6 @@ bool printSMBIOS(
 
 int main(int argc, char ** argv)
 {
-    if (argc != 2) return 1;
-
     std::vector<uint8_t> buffer;
     #ifdef _WIN32
     if (!getDMI(buffer)) return 1;
