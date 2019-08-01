@@ -244,7 +244,7 @@ enum SpecVersion
 	SMBIOS_2_6 = 0x0206,
 	SMBIOS_2_7 = 0x0207,
 	SMBIOS_2_8 = 0x0208,
-	SMBIOS_3_0 = 0x0300,
+	SMBIOS_3_0 = 0x0300
 };
 
 

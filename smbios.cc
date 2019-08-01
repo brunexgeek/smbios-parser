@@ -99,7 +99,7 @@ Parser::Parser( const uint8_t *data, size_t size, int version ) : data_(data + 3
     return;
 
 INVALID_DATA:
-    data_ = ptr_ = start_ = nullptr;
+    data_ = ptr_ = start_ = NULL;
 }
 
 
@@ -472,7 +472,7 @@ int Parser::version() const
 
 bool Parser::valid() const
 {
-    return data_ != nullptr;
+    return data_ != NULL;
 }
 
 
