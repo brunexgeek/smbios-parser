@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Bruno Ribeiro
+ * Copyright 2020 Bruno Ribeiro
  * https://github.com/brunexgeek/smbios-parser
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,11 +18,9 @@
 #ifndef DMI_PARSER_HH
 #define DMI_PARSER_HH
 
-
 #include <stddef.h>
 #include <stdint.h>
 #include <cstring>
-
 
 #define DMI_TYPE_BIOS         0
 #define DMI_TYPE_SYSINFO      1
@@ -232,7 +230,6 @@ struct Entry
     } data;
 };
 
-
 enum SpecVersion
 {
 	SMBIOS_2_0 = 0x0200,
@@ -246,7 +243,6 @@ enum SpecVersion
 	SMBIOS_2_8 = 0x0208,
 	SMBIOS_3_0 = 0x0300
 };
-
 
 class Parser
 {
@@ -269,12 +265,8 @@ class Parser
         const char *getString( int index ) const;
 };
 
-
 } // namespace smbios
 
-
-#undef DMI_READ_8U
-#undef DMI_READ_16U
-
+#undef SMBIOS_STRING
 
 #endif // DMI_PARSER_HH

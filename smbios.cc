@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Bruno Ribeiro
+ * Copyright 2020 Bruno Ribeiro
  * https://github.com/brunexgeek/smbios-parser
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@
 #include <vector>
 #include <stdio.h>
 
-
 #define DMI_READ_8U    *ptr_++
 #define DMI_READ_16U   *((uint16_t*)ptr_), ptr_ += 2
 #define DMI_READ_32U   *((uint32_t*)ptr_), ptr_ += 4
@@ -27,7 +26,6 @@
 #define DMI_ENTRY_HEADER_SIZE   4
 
 namespace smbios {
-
 
 #ifdef _WIN32
 
@@ -43,7 +41,6 @@ struct RawSMBIOSData
 	BYTE    SMBIOSTableData[];
 };
 #endif
-
 
 Parser::Parser( const uint8_t *data, size_t size, int version ) : data_(data + 32), size_(size),
     ptr_(NULL), version_(version)
@@ -116,12 +113,10 @@ const char *Parser::getString( int index ) const
     return ptr;
 }
 
-
 void Parser::reset()
 {
     ptr_ = start_ = NULL;
 }
-
 
 const Entry *Parser::next()
 {
@@ -159,11 +154,8 @@ const Entry *Parser::next()
     return parseEntry();
 }
 
-
 const Entry *Parser::parseEntry()
 {
-    std::vector<const char *> strings;
-
     if (entry_.type == DMI_TYPE_BIOS)
     {
         // 2.0+
@@ -300,7 +292,7 @@ const Entry *Parser::parseEntry()
     }
     if (entry_.type == DMI_TYPE_PROCESSOR)
     {
-        // version 2.0
+        // 2.0+
         if (version_ >= smbios::SMBIOS_2_0)
         {
             entry_.data.processor.SocketDesignation_ = DMI_READ_8U;
@@ -321,12 +313,14 @@ const Entry *Parser::parseEntry()
             entry_.data.processor.ProcessorManufacturer = getString(entry_.data.processor.ProcessorManufacturer_);
             entry_.data.processor.ProcessorVersion      = getString(entry_.data.processor.ProcessorVersion_);
         }
+        // 2.1+
         if (version_ >= smbios::SMBIOS_2_1)
         {
             entry_.data.processor.L1CacheHandle = DMI_READ_16U;
             entry_.data.processor.L2CacheHandle = DMI_READ_16U;
             entry_.data.processor.L3CacheHandle = DMI_READ_16U;
         }
+        // 2.3+
         if (version_ >= smbios::SMBIOS_2_3)
         {
             entry_.data.processor.SerialNumber_ = DMI_READ_8U;
@@ -337,6 +331,7 @@ const Entry *Parser::parseEntry()
             entry_.data.processor.AssetTagNumber = getString(entry_.data.processor.AssetTagNumber_);
             entry_.data.processor.PartNumber = getString(entry_.data.processor.PartNumber_);
         }
+        // 2.5+
         if (version_ >= smbios::SMBIOS_2_5)
         {
             entry_.data.processor.CoreCount = DMI_READ_8U;
@@ -344,10 +339,12 @@ const Entry *Parser::parseEntry()
             entry_.data.processor.ThreadCount = DMI_READ_8U;
             entry_.data.processor.ProcessorCharacteristics = DMI_READ_16U;
         }
+        //2.6+
         if (version_ >= smbios::SMBIOS_2_6)
         {
             entry_.data.processor.ProcessorFamily2 = DMI_READ_16U;
         }
+        //3.0+
         if (version_ >= smbios::SMBIOS_3_0)
         {
             entry_.data.processor.CoreCount2 = DMI_READ_16U;
@@ -468,11 +465,9 @@ int Parser::version() const
     return version_;
 }
 
-
 bool Parser::valid() const
 {
     return data_ != NULL;
 }
-
 
 } // namespace smbios

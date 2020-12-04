@@ -22,15 +22,11 @@
 #include <iomanip>
 #include "smbios.hh"
 
-
-
 #ifdef _WIN32
 
 #include <Windows.h>
 
-
-
-bool getDMI( std::vector<uint8_t> &buffer )
+static bool getDMI( std::vector<uint8_t> &buffer )
 {
     const BYTE byteSignature[] = { 'B', 'M', 'S', 'R' };
     const DWORD signature = *((DWORD*)byteSignature);
@@ -52,13 +48,13 @@ bool getDMI( std::vector<uint8_t> &buffer )
 
 #else
 
-bool getDMI( const std::string &path, std::vector<uint8_t> &buffer )
+static bool getDMI( const std::string &path, std::vector<uint8_t> &buffer )
 {
     std::ifstream input;
     std::string fileName;
 
     // get the SMBIOS structures size
-    fileName = path +  "/DMI";
+    fileName = path + "/DMI";
     struct stat info;
     if (stat(fileName.c_str(), &info) != 0) return false;
     buffer.resize(info.st_size + 32);
@@ -80,7 +76,6 @@ bool getDMI( const std::string &path, std::vector<uint8_t> &buffer )
 }
 
 #endif
-
 
 bool printSMBIOS(
     smbios::Parser &parser,
@@ -259,18 +254,35 @@ bool printSMBIOS(
     return true;
 }
 
-
 int main(int argc, char ** argv)
 {
     std::vector<uint8_t> buffer;
+    bool result = false;
+
     #ifdef _WIN32
-    if (!getDMI(buffer)) return 1;
+
+    result = getDMI(buffer);
+
     #else
-    if (argc != 2) return 1;
-    if (!getDMI(argv[1], buffer)) return 1;
+
+    const char *path = "/sys/firmware/dmi/tables";
+    if (argc == 2) path = argv[1];
+    std::cerr << "Using SMBIOS tables from " << path << std::endl;
+    result = getDMI(path, buffer);
+
     #endif
-    smbios::Parser parser(&buffer.front(), buffer.size());
-    printSMBIOS(parser, std::cout);
+
+    if (!result)
+    {
+        std::cerr << "Unable to open SMBIOS tables" << std::endl;
+        return 1;
+    }
+
+    smbios::Parser parser(buffer.data(), buffer.size());
+    if (parser.valid())
+        printSMBIOS(parser, std::cout);
+    else
+        std::cerr << "Invalid SMBIOS data" << std::endl;
 
     return 0;
 }
