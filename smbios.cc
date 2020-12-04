@@ -102,13 +102,12 @@ INVALID_DATA:
     data_ = ptr_ = start_ = NULL;
 }
 
-
 const char *Parser::getString( int index ) const
 {
     if (index <= 0) return "";
 
     const char *ptr = (const char*) start_ + (size_t) entry_.length - DMI_ENTRY_HEADER_SIZE;
-    for (int i = 1; i < index; ++i)
+    for (int i = 1; *ptr != 0 && i < index; ++i)
     {
         // TODO: check buffer limits
         while (*ptr != 0) ++ptr;
