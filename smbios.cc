@@ -456,6 +456,16 @@ const Entry *Parser::parseEntry()
             entry_.data.memory.ConfiguredVoltage = DMI_READ_16U;
         }
     }
+    else
+    if (entry_.type == DMI_TYPE_OEMSTRINGS)
+    {
+        // 2.0+
+        if (version_ >= smbios::SMBIOS_2_0)
+        {
+            entry_.data.oemstrings.Count = DMI_READ_8U;
+            entry_.data.oemstrings.Values = (const char*) ptr_;
+        }
+    }
 
     return &entry_;
 }

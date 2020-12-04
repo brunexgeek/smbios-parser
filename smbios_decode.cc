@@ -249,6 +249,24 @@ bool printSMBIOS(
             }
             output << '\n';
         }
+        else
+        if (entry->type == DMI_TYPE_OEMSTRINGS)
+        {
+            if (version >= smbios::SMBIOS_2_0)
+            {
+                output << "  Count: " << (int) entry->data.oemstrings.Count << std::endl;
+                const char *ptr = entry->data.oemstrings.Values;
+                int c = entry->data.oemstrings.Count;
+                while (ptr != nullptr && *ptr != 0 && c > 0)
+                {
+                    output << "         [" << ptr << "]" << std::endl;
+                    while (*ptr != 0) ++ptr;
+                    ++ptr;
+                }
+            }
+            output << '\n';
+        }
+
     }
 
     return true;

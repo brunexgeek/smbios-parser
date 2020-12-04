@@ -22,14 +22,15 @@
 #include <stdint.h>
 #include <cstring>
 
-#define DMI_TYPE_BIOS         0
-#define DMI_TYPE_SYSINFO      1
-#define DMI_TYPE_BASEBOARD    2
-#define DMI_TYPE_SYSENCLOSURE 3
-#define DMI_TYPE_PROCESSOR    4
-#define DMI_TYPE_SYSSLOT      9
-#define DMI_TYPE_PHYSMEM      16
-#define DMI_TYPE_MEMORY       17
+const int DMI_TYPE_BIOS         = 0;
+const int DMI_TYPE_SYSINFO      = 1;
+const int DMI_TYPE_BASEBOARD    = 2;
+const int DMI_TYPE_SYSENCLOSURE = 3;
+const int DMI_TYPE_PROCESSOR    = 4;
+const int DMI_TYPE_SYSSLOT      = 9;
+const int DMI_TYPE_OEMSTRINGS   = 11;
+const int DMI_TYPE_PHYSMEM      = 16;
+const int DMI_TYPE_MEMORY       = 17;
 
 #define SMBIOS_STRING(name)  uint8_t name##_; const char * name
 
@@ -166,6 +167,14 @@ struct SystemSlot
 	uint8_t DeviceOrFunctionNumber;
 };
 
+// DMI_TYPE_OEMSTRINGS
+struct TypeOemStrings
+{
+	// 2.0+
+	uint8_t Count;
+	const char *Values;
+};
+
 // DMI_TYPE_PHYSMEM
 struct TypePhysicalMemory
 {
@@ -227,6 +236,7 @@ struct Entry
         TypePhysicalMemory physmem;
         TypeMemoryDevice memory;
 		SystemSlot sysslot;
+		TypeOemStrings oemstrings;
     } data;
 };
 
