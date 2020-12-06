@@ -43,7 +43,7 @@ struct RawSMBIOSData
 #endif
 
 Parser::Parser( const uint8_t *data, size_t size, int version ) : data_(data + 32), size_(size),
-    ptr_(NULL), version_(version)
+    ptr_(nullptr), version_(version)
 {
     int vn = 0;
 
@@ -79,7 +79,7 @@ Parser::Parser( const uint8_t *data, size_t size, int version ) : data_(data + 3
     else
         goto INVALID_DATA;
     #else
-    RawSMBIOSData *smBiosData = NULL;
+    RawSMBIOSData *smBiosData = nullptr;
     smBiosData = (RawSMBIOSData *) data;
 
     // get the SMBIOS version
@@ -96,7 +96,7 @@ Parser::Parser( const uint8_t *data, size_t size, int version ) : data_(data + 3
     return;
 
 INVALID_DATA:
-    data_ = ptr_ = start_ = NULL;
+    data_ = ptr_ = start_ = nullptr;
 }
 
 const char *Parser::getString( int index ) const
@@ -115,15 +115,15 @@ const char *Parser::getString( int index ) const
 
 void Parser::reset()
 {
-    ptr_ = start_ = NULL;
+    ptr_ = start_ = nullptr;
 }
 
 const Entry *Parser::next()
 {
-    if (data_ == NULL) return NULL;
+    if (data_ == nullptr) return nullptr;
 
     // jump to the next field
-    if (ptr_ == NULL)
+    if (ptr_ == nullptr)
         ptr_ = start_ = data_;
     else
     {
@@ -132,8 +132,8 @@ const Entry *Parser::next()
         ptr_ += 2;
         if (ptr_ >= data_ + size_)
         {
-            ptr_ = start_ = NULL;
-            return NULL;
+            ptr_ = start_ = nullptr;
+            return nullptr;
         }
     }
 
@@ -143,12 +143,14 @@ const Entry *Parser::next()
     entry_.type = DMI_READ_8U;
     entry_.length = DMI_READ_8U;
     entry_.handle = DMI_READ_16U;
+    entry_.rawdata = ptr_ - 4;
+    entry_.strings = (const char *) entry_.rawdata + entry_.length;
     start_ = ptr_;
 
     if (entry_.type == 127)
     {
         reset();
-        return NULL;
+        return nullptr;
     }
 
     return parseEntry();
@@ -156,7 +158,7 @@ const Entry *Parser::next()
 
 const Entry *Parser::parseEntry()
 {
-    if (entry_.type == DMI_TYPE_BIOS)
+    if (entry_.type == TYPE_BIOS_INFO)
     {
         // 2.0+
         if (version_ >= SMBIOS_2_0)
@@ -185,7 +187,7 @@ const Entry *Parser::parseEntry()
         }
     }
     else
-    if (entry_.type == DMI_TYPE_SYSINFO)
+    if (entry_.type == TYPE_SYSTEM_INFO)
     {
         // 2.0+
         if (version_ >= SMBIOS_2_0)
@@ -218,7 +220,7 @@ const Entry *Parser::parseEntry()
         }
     }
     else
-    if (entry_.type == DMI_TYPE_BASEBOARD)
+    if (entry_.type == TYPE_BASEBOARD_INFO)
     {
         // 2.0+
         if (version_ >= SMBIOS_2_0)
@@ -247,7 +249,7 @@ const Entry *Parser::parseEntry()
         return &entry_;
     }
     else
-    if (entry_.type == DMI_TYPE_SYSENCLOSURE)
+    if (entry_.type == TYPE_SYSTEM_ENCLOSURE)
     {
         // 2.0+
         if (version_ >= SMBIOS_2_0)
@@ -290,7 +292,7 @@ const Entry *Parser::parseEntry()
             entry_.data.sysenclosure.SKUNumber = getString(entry_.data.sysenclosure.SKUNumber_);
         }
     }
-    if (entry_.type == DMI_TYPE_PROCESSOR)
+    if (entry_.type == TYPE_PROCESSOR_INFO)
     {
         // 2.0+
         if (version_ >= smbios::SMBIOS_2_0)
@@ -355,7 +357,7 @@ const Entry *Parser::parseEntry()
         return &entry_;
     }
     else
-    if (entry_.type == DMI_TYPE_SYSSLOT)
+    if (entry_.type == TYPE_SYSTEM_SLOT)
     {
         // 2.0+
         if (version_ >= smbios::SMBIOS_2_0)
@@ -384,7 +386,7 @@ const Entry *Parser::parseEntry()
         }
     }
     else
-    if (entry_.type == DMI_TYPE_PHYSMEM)
+    if (entry_.type == TYPE_PHYSICAL_MEMORY_ARRAY)
     {
         // 2.1+
         if (version_ >= smbios::SMBIOS_2_1)
@@ -403,7 +405,7 @@ const Entry *Parser::parseEntry()
         }
     }
     else
-    if (entry_.type == DMI_TYPE_MEMORY)
+    if (entry_.type == TYPE_MEMORY_DEVICE)
     {
         // 2.1+
         if (version_ >= smbios::SMBIOS_2_1)
@@ -457,13 +459,127 @@ const Entry *Parser::parseEntry()
         }
     }
     else
-    if (entry_.type == DMI_TYPE_OEMSTRINGS)
+    if (entry_.type == TYPE_OEM_STRINGS)
     {
         // 2.0+
         if (version_ >= smbios::SMBIOS_2_0)
         {
             entry_.data.oemstrings.Count = DMI_READ_8U;
             entry_.data.oemstrings.Values = (const char*) ptr_;
+        }
+    }
+    else
+    if (entry_.type == TYPE_PORT_CONNECTOR)
+    {
+        // 2.0+
+        if (version_ >= smbios::SMBIOS_2_0)
+        {
+            entry_.data.portconn.InternalReferenceDesignator_ = DMI_READ_8U;
+            entry_.data.portconn.InternalConnectorType = DMI_READ_8U;
+            entry_.data.portconn.ExternalReferenceDesignator_ = DMI_READ_8U;
+            entry_.data.portconn.ExternalConnectorType = DMI_READ_8U;
+            entry_.data.portconn.PortType = DMI_READ_8U;
+
+            entry_.data.portconn.ExternalReferenceDesignator = getString(entry_.data.portconn.ExternalReferenceDesignator_);
+            entry_.data.portconn.InternalReferenceDesignator = getString(entry_.data.portconn.InternalReferenceDesignator_);
+        }
+    }
+    else
+    if (entry_.type == TYPE_MEMORY_ARRAY_MAPPED_ADDRESS)
+    {
+        if (version_ >= smbios::SMBIOS_2_1)
+        {
+            entry_.data.mamaddr.StartingAddress = DMI_READ_32U;
+            entry_.data.mamaddr.EndingAddress = DMI_READ_32U;
+            entry_.data.mamaddr.MemoryArrayHandle = DMI_READ_16U;
+            entry_.data.mamaddr.PartitionWidth = DMI_READ_8U;
+        }
+        if (version_ >= smbios::SMBIOS_2_7)
+        {
+            entry_.data.mamaddr.ExtendedStartingAddress = DMI_READ_64U;
+            entry_.data.mamaddr.ExtendedEndingAddress = DMI_READ_64U;
+        }
+    }
+    else
+    if (entry_.type == TYPE_MEMORY_DEVICE_MAPPED_ADDRESS)
+    {
+        if (version_ >= smbios::SMBIOS_2_1)
+        {
+            entry_.data.mdmaddr.StartingAddress = DMI_READ_32U;
+            entry_.data.mdmaddr.EndingAddress = DMI_READ_32U;
+            entry_.data.mdmaddr.MemoryDeviceHandle = DMI_READ_16U;
+            entry_.data.mdmaddr.MemoryArrayMappedAddressHandle = DMI_READ_16U;
+            entry_.data.mdmaddr.PartitionRowPosition = DMI_READ_8U;
+            entry_.data.mdmaddr.InterleavePosition = DMI_READ_8U;
+            entry_.data.mdmaddr.InterleavedDataDepth = DMI_READ_8U;
+        }
+        if (version_ >= smbios::SMBIOS_2_7)
+        {
+            entry_.data.mdmaddr.ExtendedStartingAddress = DMI_READ_64U;
+            entry_.data.mdmaddr.ExtendedEndingAddress = DMI_READ_64U;
+        }
+    }
+    else
+    if (entry_.type == TYPE_SYSTEM_BOOT_INFO)
+    {
+        if (version_ >= smbios::SMBIOS_2_0)
+        {
+            ptr_ += sizeof(entry_.data.bootinfo.Reserved);
+            entry_.data.bootinfo.BootStatus = ptr_;
+        }
+    }
+    else
+    if (entry_.type == TYPE_MANAGEMENT_DEVICE)
+    {
+        if (version_ >= smbios::SMBIOS_2_0)
+        {
+            entry_.data.mdev.Description_ = DMI_READ_8U;
+            entry_.data.mdev.Type = DMI_READ_8U;
+            entry_.data.mdev.Address = DMI_READ_32U;
+            entry_.data.mdev.AddressType = DMI_READ_8U;
+
+            entry_.data.mdev.Description = getString(entry_.data.mdev.Description_);
+        }
+    }
+    else
+    if (entry_.type == TYPE_MANAGEMENT_DEVICE_COMPONENT)
+    {
+        if (version_ >= smbios::SMBIOS_2_0)
+        {
+            entry_.data.mdcom.Description_ = DMI_READ_8U;
+            entry_.data.mdcom.ManagementDeviceHandle = DMI_READ_16U;
+            entry_.data.mdcom.ComponentHandle = DMI_READ_16U;
+            entry_.data.mdcom.ThresholdHandle = DMI_READ_16U;
+
+            entry_.data.mdev.Description = getString(entry_.data.mdev.Description_);
+        }
+    }
+    else
+    if (entry_.type == TYPE_MANAGEMENT_DEVICE_THRESHOLD_DATA)
+    {
+        if (version_ >= smbios::SMBIOS_2_0)
+        {
+            entry_.data.mdtdata.LowerThresholdNonCritical = DMI_READ_16U;
+            entry_.data.mdtdata.UpperThresholdNonCritical = DMI_READ_16U;
+            entry_.data.mdtdata.LowerThresholdCritical = DMI_READ_16U;
+            entry_.data.mdtdata.UpperThresholdCritical = DMI_READ_16U;
+            entry_.data.mdtdata.LowerThresholdNonRecoverable = DMI_READ_16U;
+            entry_.data.mdtdata.UpperThresholdNonRecoverable = DMI_READ_16U;
+        }
+    }
+    else
+    if (entry_.type == TYPE_ONBOARD_DEVICES_EXTENDED_INFO)
+    {
+        if (version_ >= smbios::SMBIOS_2_0)
+        {
+            entry_.data.odeinfo.ReferenceDesignation_ = DMI_READ_8U;
+            entry_.data.odeinfo.DeviceType = DMI_READ_8U;
+            entry_.data.odeinfo.DeviceTypeInstance = DMI_READ_8U;
+            entry_.data.odeinfo.SegmentGroupNumber = DMI_READ_16U;
+            entry_.data.odeinfo.BusNumber = DMI_READ_8U;
+            entry_.data.odeinfo.DeviceOrFunctionNumber = DMI_READ_8U;
+
+            entry_.data.odeinfo.ReferenceDesignation = getString(entry_.data.odeinfo.ReferenceDesignation_);
         }
     }
 
@@ -477,7 +593,7 @@ int Parser::version() const
 
 bool Parser::valid() const
 {
-    return data_ != NULL;
+    return data_ != nullptr;
 }
 
 } // namespace smbios

@@ -22,22 +22,12 @@
 #include <stdint.h>
 #include <cstring>
 
-const int DMI_TYPE_BIOS         = 0;
-const int DMI_TYPE_SYSINFO      = 1;
-const int DMI_TYPE_BASEBOARD    = 2;
-const int DMI_TYPE_SYSENCLOSURE = 3;
-const int DMI_TYPE_PROCESSOR    = 4;
-const int DMI_TYPE_SYSSLOT      = 9;
-const int DMI_TYPE_OEMSTRINGS   = 11;
-const int DMI_TYPE_PHYSMEM      = 16;
-const int DMI_TYPE_MEMORY       = 17;
-
 #define SMBIOS_STRING(name)  uint8_t name##_; const char * name
 
 namespace smbios {
 
-// DMI_TYPE_BIOS
-struct TypeBios
+static const int TYPE_BIOS_INFO = 0;
+struct BiosInfo
 {
 	SMBIOS_STRING(Vendor);
 	SMBIOS_STRING(BIOSVersion);
@@ -53,8 +43,8 @@ struct TypeBios
 	uint8_t EmbeddedFirmwareMinorRelease;
 };
 
-// DMI_TYPE_SYSINFO
-struct TypeSysInfo
+const static int TYPE_SYSTEM_INFO = 1;
+struct SystemInfo
 {
 	// 2.0+
 	SMBIOS_STRING(Manufacturer);
@@ -69,8 +59,8 @@ struct TypeSysInfo
 	SMBIOS_STRING(Family);
 };
 
-// DMI_TYPE_BASEBOARD
-struct TypeBaseboard
+const static int TYPE_BASEBOARD_INFO = 2;
+struct BaseboardInfo
 {
 	// 2.0+
 	SMBIOS_STRING(Manufacturer);
@@ -86,8 +76,8 @@ struct TypeBaseboard
 	uint16_t *ContainedObjectHandles;
 };
 
-// DMI_TYPE_SYSENCLOSURE
-struct TypeSystemEnclosure
+const static int TYPE_SYSTEM_ENCLOSURE = 3;
+struct SystemEnclosure
 {
 	// 2.0+
 	SMBIOS_STRING(Manufacturer);
@@ -111,8 +101,8 @@ struct TypeSystemEnclosure
 	SMBIOS_STRING(SKUNumber);
 };
 
-// DMI_TYPE_PROCESSOR
-struct TypeProcessor
+const static int TYPE_PROCESSOR_INFO = 4;
+struct ProcessorInfo
 {
 	// 2.0+
 	SMBIOS_STRING(SocketDesignation);
@@ -148,7 +138,17 @@ struct TypeProcessor
 	uint16_t ThreadCount2;
 };
 
-// DMI_TYPE_SYSSLOT
+const static int TYPE_PORT_CONNECTOR = 8;
+struct PortConnector
+{
+	SMBIOS_STRING(InternalReferenceDesignator);
+	uint8_t InternalConnectorType;
+	SMBIOS_STRING(ExternalReferenceDesignator);
+	uint8_t ExternalConnectorType;
+	uint8_t PortType;
+};
+
+const static int TYPE_SYSTEM_SLOT = 9;
 struct SystemSlot
 {
 	// 2.0+
@@ -167,16 +167,16 @@ struct SystemSlot
 	uint8_t DeviceOrFunctionNumber;
 };
 
-// DMI_TYPE_OEMSTRINGS
-struct TypeOemStrings
+const static int TYPE_OEM_STRINGS = 11;
+struct OemStrings
 {
 	// 2.0+
 	uint8_t Count;
 	const char *Values;
 };
 
-// DMI_TYPE_PHYSMEM
-struct TypePhysicalMemory
+const static int TYPE_PHYSICAL_MEMORY_ARRAY = 16;
+struct PhysicalMemoryArray
 {
     // 2.1+
     uint8_t Location;
@@ -189,8 +189,8 @@ struct TypePhysicalMemory
     uint64_t ExtendedMaximumCapacity;
 };
 
-// DMI_TYPE_MEMORY
-struct TypeMemoryDevice
+const static int TYPE_MEMORY_DEVICE = 17;
+struct MemoryDevice
 {
     // 2.1+
     uint16_t PhysicalArrayHandle;
@@ -221,6 +221,87 @@ struct TypeMemoryDevice
 	uint16_t ConfiguredVoltage;
 };
 
+const static int TYPE_MEMORY_ARRAY_MAPPED_ADDRESS = 19;
+struct MemoryArrayMappedAddress
+{
+	// 2.1+
+	uint32_t StartingAddress;
+	uint32_t EndingAddress;
+	uint16_t MemoryArrayHandle;
+	uint8_t PartitionWidth;
+	// 2.7+
+	uint64_t ExtendedStartingAddress;
+	uint64_t ExtendedEndingAddress;
+};
+
+const static int TYPE_MEMORY_DEVICE_MAPPED_ADDRESS = 20;
+struct MemoryDeviceMappedAddress
+{
+	// 2.1+
+	uint32_t StartingAddress;
+	uint32_t EndingAddress;
+	uint16_t MemoryDeviceHandle;
+	uint16_t MemoryArrayMappedAddressHandle;
+	uint8_t PartitionRowPosition;
+	uint8_t InterleavePosition;
+	uint8_t InterleavedDataDepth;
+	// 2.7+
+	uint64_t ExtendedStartingAddress;
+	uint64_t ExtendedEndingAddress;
+};
+
+const static int TYPE_SYSTEM_BOOT_INFO = 32;
+struct SystemBootInfo
+{
+	// 2.0+
+	uint8_t Reserved[6];
+	const uint8_t *BootStatus;
+};
+
+const static int TYPE_MANAGEMENT_DEVICE = 34;
+struct ManagementDevice
+{
+	// 2.0+
+	SMBIOS_STRING(Description);
+	uint8_t Type;
+	uint32_t Address;
+	uint8_t AddressType;
+};
+
+const static int TYPE_MANAGEMENT_DEVICE_COMPONENT = 35;
+struct ManagementDeviceComponent
+{
+	// 2.0+
+	SMBIOS_STRING(Description);
+	uint16_t ManagementDeviceHandle;
+	uint16_t ComponentHandle;
+	uint16_t ThresholdHandle;
+};
+
+const static int TYPE_MANAGEMENT_DEVICE_THRESHOLD_DATA = 36;
+struct ManagementDeviceThresholdData
+{
+	// 2.0+
+	uint16_t LowerThresholdNonCritical;
+	uint16_t UpperThresholdNonCritical;
+	uint16_t LowerThresholdCritical;
+	uint16_t UpperThresholdCritical;
+	uint16_t LowerThresholdNonRecoverable;
+	uint16_t UpperThresholdNonRecoverable;
+};
+
+const static int TYPE_ONBOARD_DEVICES_EXTENDED_INFO = 41;
+struct OnboardDevicesExtendedInfo
+{
+	// 2.0+
+	SMBIOS_STRING(ReferenceDesignation);
+	uint8_t DeviceType;
+	uint8_t DeviceTypeInstance;
+	uint16_t SegmentGroupNumber;
+	uint8_t BusNumber;
+	uint8_t DeviceOrFunctionNumber;
+};
+
 struct Entry
 {
     uint8_t type;
@@ -228,16 +309,26 @@ struct Entry
 	uint16_t handle;
     union
     {
-        TypeProcessor processor;
-        TypeBaseboard baseboard;
-        TypeSysInfo sysinfo;
-        TypeBios bios;
-        TypeSystemEnclosure sysenclosure;
-        TypePhysicalMemory physmem;
-        TypeMemoryDevice memory;
+        ProcessorInfo processor;
+        BaseboardInfo baseboard;
+        SystemInfo sysinfo;
+        BiosInfo bios;
+        SystemEnclosure sysenclosure;
+        PhysicalMemoryArray physmem;
+        MemoryDevice memory;
 		SystemSlot sysslot;
-		TypeOemStrings oemstrings;
+		OemStrings oemstrings;
+		PortConnector portconn;
+		MemoryArrayMappedAddress mamaddr;
+		MemoryDeviceMappedAddress mdmaddr;
+		SystemBootInfo bootinfo;
+		ManagementDevice mdev;
+		ManagementDeviceComponent mdcom;
+		ManagementDeviceThresholdData mdtdata;
+		OnboardDevicesExtendedInfo odeinfo;
     } data;
+	const uint8_t *rawdata;
+	const char *strings;
 };
 
 enum SpecVersion
