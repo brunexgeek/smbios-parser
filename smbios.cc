@@ -454,7 +454,7 @@ const Entry *Parser::parseEntry()
         if (version_ >= smbios::SMBIOS_2_8)
         {
             entry_.data.memory.MinimumVoltage = DMI_READ_16U;
-            entry_.data.memory.MinimumVoltage = DMI_READ_16U;
+            entry_.data.memory.MaximumVoltage = DMI_READ_16U;
             entry_.data.memory.ConfiguredVoltage = DMI_READ_16U;
         }
     }
