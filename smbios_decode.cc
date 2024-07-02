@@ -112,15 +112,15 @@ static void hexdump( std::ostream &out, const uint8_t *buffer, size_t size )
 }
 
 bool printSMBIOS(
-    smbios::Parser &parser,
+    ParserContext *parser,
     std::ostream &output )
 {
-    int version = parser.version();
+    int version = smbios_get_version(parser);
     const smbios::Entry *entry = nullptr;
     while (true)
     {
-        entry = parser.next();
-        if (entry == nullptr) break;
+        if (smbios_next(parser, &entry) != SMBERR_OK)
+            break;
         output << "Handle 0x" << std::hex << std::setw(4) << std::setfill('0') << (int) entry->handle << std::dec
             << ", DMI Type " << (int) entry->type << ", " << (int) entry->length << " bytes\n";
 
@@ -469,9 +469,9 @@ int main(int argc, char ** argv)
         return 1;
     }
 
-    smbios::Parser parser(buffer.data(), buffer.size());
-    if (parser.valid())
-        printSMBIOS(parser, std::cout);
+    ParserContext parser;
+    if (smbios_initialize(&parser, buffer.data(), buffer.size(), SMBIOS_3_0) == SMBERR_OK)
+        printSMBIOS(&parser, std::cout);
     else
         std::cerr << "Invalid SMBIOS data" << std::endl;
 

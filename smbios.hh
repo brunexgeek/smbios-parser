@@ -26,6 +26,11 @@
 
 namespace smbios {
 
+static constexpr int SMBERR_OK = 0;
+static constexpr int SMBERR_INVALID_ARGUMENT = -1;
+static constexpr int SMBERR_INVALID_SMBIOS_DATA = -2;
+static constexpr int SMBERR_END_OF_STREAM = -3;
+
 static const int TYPE_BIOS_INFO = 0;
 struct BiosInfo
 {
@@ -345,26 +350,21 @@ enum SpecVersion
 	SMBIOS_3_0 = 0x0300
 };
 
-class Parser
+struct ParserContext
 {
-    public:
-        Parser( const uint8_t *data, size_t size, int version = 0 );
-        void reset();
-        const Entry *next();
-		int version() const;
-		bool valid() const;
-
-    private:
-        const uint8_t *data_;
-        size_t size_;
-        Entry entry_;
-        const uint8_t *ptr_;
-        const uint8_t *start_;
-		int version_;
-
-        const Entry *parseEntry();
-        const char *getString( int index ) const;
+	const uint8_t *data;
+	const uint8_t *ptr;
+	const uint8_t *start;
+	size_t size;
+	int version;
+	Entry entry;
 };
+
+int smbios_initialize(ParserContext *context, const uint8_t *data, size_t size, int version );
+int smbios_next(ParserContext *context, const Entry **entry);
+int smbios_destroy(ParserContext ** context);
+int smbios_get_version(ParserContext *context);
+bool smbios_valid(ParserContext *context);
 
 } // namespace smbios
 
