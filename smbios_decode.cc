@@ -121,8 +121,8 @@ bool printSMBIOS(
     {
         if (smbios_next(parser, &entry) != SMBERR_OK)
             break;
-        output << "Handle 0x" << std::hex << std::setw(4) << std::setfill('0') << (int) entry->handle << std::dec
-            << ", DMI Type " << (int) entry->type << ", " << (int) entry->length << " bytes\n";
+        output << "Handle 0x" << std::uppercase << std::hex << std::setw(4) << std::setfill('0') << (int) entry->handle << std::dec
+            << ", DMI type " << (int) entry->type << ", " << (int) entry->length << " bytes\n";
 
         if (entry->type == TYPE_BIOS_INFO)
         {
