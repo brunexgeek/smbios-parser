@@ -334,6 +334,7 @@ struct Entry
     } data;
 	const uint8_t *rawdata;
 	const char *strings;
+	int string_count;
 };
 
 enum SpecVersion
@@ -354,15 +355,19 @@ struct ParserContext
 {
 	const uint8_t *data;
 	const uint8_t *ptr;
-	const uint8_t *start;
+	// Pointer to the entry start
+	const uint8_t *estart;
+	// Pointer to the entry end (one past the last byte of the entry)
+	const uint8_t *eend;
 	size_t size;
 	int version;
 	Entry entry;
+	bool failed;
 };
 
 int smbios_initialize(ParserContext *context, const uint8_t *data, size_t size, int version );
 int smbios_next(ParserContext *context, const Entry **entry);
-int smbios_destroy(ParserContext ** context);
+int smbios_reset(ParserContext * context);
 int smbios_get_version(ParserContext *context);
 bool smbios_valid(ParserContext *context);
 
