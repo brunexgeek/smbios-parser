@@ -79,41 +79,21 @@ static bool getDMI( const std::string &path, std::vector<uint8_t> &buffer )
 
 #endif
 
-static void field( std::ostream &out, const std::string &name, const std::string &value )
+static void hexdump( FILE *output, const uint8_t *buffer, size_t size )
 {
-    out << "    " << name << ": " << value << std::endl;
-}
-
-static void field( std::ostream &out, const std::string &name, const uint8_t *value, size_t size )
-{
-    out << "    " << name << ": " << std::hex;
-    for (size_t i = 0; i < size; ++i)
-        out << std::setw(2) << std::setfill('0') << (int) value[i]  << ' ';
-    out << std::dec << std::endl;
-}
-
-static void field( std::ostream &out, const std::string &name, uint64_t value )
-{
-    field(out, name, std::to_string(value));
-}
-
-static void hexdump( std::ostream &out, const uint8_t *buffer, size_t size )
-{
-    static const char *TABS = "        ";
     size_t i = 0;
-    out << std::hex << TABS;
+    fputs("\t\t", output);
     for (; i < size; ++i)
     {
-        if (i > 0 && (i % 16) == 0) out << std::endl << TABS;
-        out << std::setw(2) << (int) buffer[i] << ' ';
+        if (i > 0 && (i % 16) == 0)
+            fputs("\n\t\t", output);
+        fprintf(output, "%02X ", (int) buffer[i]);
     }
-    if (i != 17) out << std::endl;
-    out << std::dec;
+    if (i != 17)
+        fputs("\n", output);
 }
 
-bool printSMBIOS(
-    ParserContext *parser,
-    std::ostream &output )
+bool printSMBIOS( ParserContext *parser, FILE *output )
 {
     int version = smbios_get_version(parser);
     const smbios::Entry *entry = nullptr;
@@ -121,306 +101,312 @@ bool printSMBIOS(
     {
         if (smbios_next(parser, &entry) != SMBERR_OK)
             break;
-        output << "Handle 0x" << std::uppercase << std::hex << std::setw(4) << std::setfill('0') << (int) entry->handle << std::dec
-            << ", DMI type " << (int) entry->type << ", " << (int) entry->length << " bytes\n";
+
+        fprintf(output, "Handle 0x%04X, DMI type %d, %d bytes\n", (int) entry->handle, (int) entry->type, (int) entry->length);
 
         if (entry->type == TYPE_BIOS_INFO)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "Vendor", entry->data.bios.Vendor);
-                field(output, "BIOSVersion", entry->data.bios.BIOSVersion);
-                field(output, "BIOSStartingSegment", (int) entry->data.bios.BIOSStartingSegment);
-                field(output, "BIOSReleaseDate", entry->data.bios.BIOSReleaseDate);
-                field(output, "BIOSROMSize", std::to_string((((int) entry->data.bios.BIOSROMSize + 1) * 64)) + " KiB");
+                fprintf(output, "Vendor: %s\n", entry->data.bios.Vendor);
+                fprintf(output, "BIOSVersion: %s\n", entry->data.bios.BIOSVersion);
+                fprintf(output, "BIOSStartingSegment: %X\n", (int) entry->data.bios.BIOSStartingSegment);
+                fprintf(output, "BIOSReleaseDate: %s\n", entry->data.bios.BIOSReleaseDate);
+                fprintf(output, "BIOSROMSize: %d KiB\n", ((int) entry->data.bios.BIOSROMSize + 1) * 64);
             }
             if (version >= smbios::SMBIOS_2_4)
             {
-                field(output, "SystemBIOSMajorRelease", (int) entry->data.bios.SystemBIOSMajorRelease);
-                field(output, "SystemBIOSMinorRelease", (int) entry->data.bios.SystemBIOSMinorRelease);
-                field(output, "EmbeddedFirmwareMajorRelease", (int) entry->data.bios.EmbeddedFirmwareMajorRelease);
-                field(output, "EmbeddedFirmwareMinorRelease", (int) entry->data.bios.EmbeddedFirmwareMinorRelease);
+                fprintf(output, "SystemBIOSMajorRelease: %d\n", (int) entry->data.bios.SystemBIOSMajorRelease);
+                fprintf(output, "SystemBIOSMinorRelease: %d\n", (int) entry->data.bios.SystemBIOSMinorRelease);
+                fprintf(output, "EmbeddedFirmwareMajorRelease: %d\n", (int) entry->data.bios.EmbeddedFirmwareMajorRelease);
+                fprintf(output, "EmbeddedFirmwareMinorRelease: %d\n", (int) entry->data.bios.EmbeddedFirmwareMinorRelease);
             }
-            output << '\n';
+            fputs("\n", output);
         }
         else
         if (entry->type == TYPE_SYSTEM_INFO)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "Manufacturer", entry->data.sysinfo.Manufacturer);
-                field(output, "ProductName", entry->data.sysinfo.ProductName);
-                field(output, "Version", entry->data.sysinfo.Version);
-                field(output, "SerialNumber", entry->data.sysinfo.SerialNumber);
+                fprintf(output, "Manufacturer: %s\n", entry->data.sysinfo.Manufacturer);
+                fprintf(output, "ProductName: %s\n", entry->data.sysinfo.ProductName);
+                fprintf(output, "Version: %s\n", entry->data.sysinfo.Version);
+                fprintf(output, "SerialNumber: %s\n", entry->data.sysinfo.SerialNumber);
             }
             if (version >= smbios::SMBIOS_2_1)
             {
-                field(output, "UUID", entry->data.sysinfo.UUID, 16);
+                fputs("UUID:", output);
+                for (int i = 0; i < 16; ++i)
+                    fprintf(output, " %02X", entry->data.sysinfo.UUID[i]);
+                fputs("\n", output);
             }
             if (version >= smbios::SMBIOS_2_4)
             {
-                field(output, "SKUNumber", entry->data.sysinfo.SKUNumber);
-                field(output, "Family", entry->data.sysinfo.Family);
+                fprintf(output, "SKUNumber: %s\n", entry->data.sysinfo.SKUNumber);
+                fprintf(output, "Family: %s\n", entry->data.sysinfo.Family);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == TYPE_BASEBOARD_INFO)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "Manufacturer", entry->data.baseboard.Manufacturer);
-                field(output, "Product", entry->data.baseboard.Product);
-                field(output, "Version", entry->data.baseboard.Version);
-                field(output, "SerialNumber", entry->data.baseboard.SerialNumber);
-                field(output, "AssetTag", entry->data.baseboard.AssetTag);
-                field(output, "LocationInChassis", entry->data.baseboard.LocationInChassis);
-                field(output, "ChassisHandle", entry->data.baseboard.ChassisHandle);
-                field(output, "BoardType", (int) entry->data.baseboard.BoardType);
+                fprintf(output, "Manufacturer: %s\n", entry->data.baseboard.Manufacturer);
+                fprintf(output, "Product Name: %s\n", entry->data.baseboard.Product);
+                fprintf(output, "Version: %s\n", entry->data.baseboard.Version);
+                fprintf(output, "Serial Number: %s\n", entry->data.baseboard.SerialNumber);
+                fprintf(output, "Asset Tag: %s\n", entry->data.baseboard.AssetTag);
+                fprintf(output, "Location In Chassis: %s\n", entry->data.baseboard.LocationInChassis);
+                fprintf(output, "Chassis Handle: %d\n", entry->data.baseboard.ChassisHandle);
+                fprintf(output, "Type: %d\n", (int) entry->data.baseboard.BoardType);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == TYPE_SYSTEM_ENCLOSURE)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "Manufacturer", entry->data.sysenclosure.Manufacturer);
-                field(output, "Version", entry->data.sysenclosure.Version);
-                field(output, "SerialNumber", entry->data.sysenclosure.SerialNumber);
-                field(output, "AssetTag", entry->data.sysenclosure.AssetTag);
+                fprintf(output, "Manufacturer: %s\n", entry->data.sysenclosure.Manufacturer);
+                fprintf(output, "Version: %s\n", entry->data.sysenclosure.Version);
+                fprintf(output, "SerialNumber: %s\n", entry->data.sysenclosure.SerialNumber);
+                fprintf(output, "AssetTag: %s\n", entry->data.sysenclosure.AssetTag);
             }
             if (version >= smbios::SMBIOS_2_3)
             {
-                field(output, "Contained Count", (int) entry->data.sysenclosure.ContainedElementCount);
-                field(output, "Contained Length", (int) entry->data.sysenclosure.ContainedElementRecordLength);
+                fprintf(output, "ContainedCount: %d\n", (int) entry->data.sysenclosure.ContainedElementCount);
+                fprintf(output, "ContainedLength: %d\n", (int) entry->data.sysenclosure.ContainedElementRecordLength);
             }
             if (version >= smbios::SMBIOS_2_7)
             {
-                field(output, "SKUNumber", entry->data.sysenclosure.SKUNumber);
+                fprintf(output, "SKUNumber: %s\n", entry->data.sysenclosure.SKUNumber);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == TYPE_PROCESSOR_INFO)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "SocketDesignation", entry->data.processor.SocketDesignation);
-                field(output, "ProcessorFamily", (int) entry->data.processor.ProcessorFamily);
-                field(output, "ProcessorManufacturer", entry->data.processor.ProcessorManufacturer);
-                field(output, "ProcessorVersion", entry->data.processor.ProcessorVersion);
-                field(output, "ProcessorID", entry->data.processor.ProcessorID, 8);
+                fprintf(output, "SocketDesignation: %s\n", entry->data.processor.SocketDesignation);
+                fprintf(output, "ProcessorFamily: %d\n", (int) entry->data.processor.ProcessorFamily);
+                fprintf(output, "ProcessorManufacturer: %s\n", entry->data.processor.ProcessorManufacturer);
+                fprintf(output, "ProcessorVersion: %s\n", entry->data.processor.ProcessorVersion);
+                fputs("ProcessorID:", output);
+                for (int i = 0; i < 8; ++i)
+                    fprintf(output, " %c\n", entry->data.processor.ProcessorID[i]);
+                fputs("\n", output);
             }
             if (version >= smbios::SMBIOS_2_5)
             {
-                field(output, "CoreCount", (int) entry->data.processor.CoreCount);
-                field(output, "CoreEnabled", (int) entry->data.processor.CoreEnabled);
-                field(output, "ThreadCount", (int) entry->data.processor.ThreadCount);
+                fprintf(output, "CoreCount: %d\n", (int) entry->data.processor.CoreCount);
+                fprintf(output, "CoreEnabled: %d\n", (int) entry->data.processor.CoreEnabled);
+                fprintf(output, "ThreadCount: %d\n", (int) entry->data.processor.ThreadCount);
             }
             if (version >= smbios::SMBIOS_2_6)
             {
-                field(output, "ProcessorFamily2", entry->data.processor.ProcessorFamily2);
+                fprintf(output, "ProcessorFamily2: %d\n", entry->data.processor.ProcessorFamily2);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == TYPE_SYSTEM_SLOT)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "SlotDesignation", entry->data.sysslot.SlotDesignation);
-                field(output, "SlotType", (int) entry->data.sysslot.SlotType);
-                field(output, "SlotDataBusWidth", (int) entry->data.sysslot.SlotDataBusWidth);
-                field(output, "SlotID", (int) entry->data.sysslot.SlotID);
+                fprintf(output, "SlotDesignation: %s\n", entry->data.sysslot.SlotDesignation);
+                fprintf(output, "SlotType: %d\n", (int) entry->data.sysslot.SlotType);
+                fprintf(output, "SlotDataBusWidth: %d\n", (int) entry->data.sysslot.SlotDataBusWidth);
+                fprintf(output, "SlotID: %d\n", (int) entry->data.sysslot.SlotID);
             }
             if (version >= smbios::SMBIOS_2_6)
             {
-                field(output, "SegmentGroupNumber", entry->data.sysslot.SegmentGroupNumber);
-                field(output, "BusNumber", (int) entry->data.sysslot.BusNumber);
+                fprintf(output, "SegmentGroupNumber: %d\n", entry->data.sysslot.SegmentGroupNumber);
+                fprintf(output, "BusNumber: %d\n", (int) entry->data.sysslot.BusNumber);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == TYPE_PHYSICAL_MEMORY_ARRAY)
         {
             if (version >= smbios::SMBIOS_2_1)
             {
-                field(output, "Use", (int) entry->data.physmem.Use);
-                field(output, "NumberDevices", entry->data.physmem.NumberDevices);
-                field(output, "MaximumCapacity", std::to_string(entry->data.physmem.MaximumCapacity) + " KiB");
-                field(output, "ExtMaximumCapacity", std::to_string(entry->data.physmem.ExtendedMaximumCapacity) + " KiB");
+                fprintf(output, "Use: %d\n", (int) entry->data.physmem.Use);
+                fprintf(output, "NumberDevices: %d\n", entry->data.physmem.NumberDevices);
+                fprintf(output, "MaximumCapacity: %d KiB\n", entry->data.physmem.MaximumCapacity);
+                fprintf(output, "ExtMaximumCapacity: %ld KiB\n", entry->data.physmem.ExtendedMaximumCapacity);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == TYPE_MEMORY_DEVICE)
         {
             if (version >= smbios::SMBIOS_2_1)
             {
-                field(output, "DeviceLocator", entry->data.memory.DeviceLocator);
-                field(output, "BankLocator", entry->data.memory.BankLocator);
+                fprintf(output, "DeviceLocator: %s\n", entry->data.memory.DeviceLocator);
+                fprintf(output, "BankLocator: %s\n", entry->data.memory.BankLocator);
             }
             if (version >= smbios::SMBIOS_2_3)
             {
-                field(output, "Speed", std::to_string(entry->data.memory.Speed) + " MHz");
-                field(output, "Manufacturer", entry->data.memory.Manufacturer);
-                field(output, "SerialNumber", entry->data.memory.SerialNumber);
-                field(output, "AssetTagNumber", entry->data.memory.AssetTagNumber);
-                field(output, "PartNumber", entry->data.memory.PartNumber);
-                field(output, "Size", std::to_string(entry->data.memory.Size) + " MiB");
-                field(output, "ExtendedSize", std::to_string(entry->data.memory.ExtendedSize) + " MiB");
+                fprintf(output, "Speed: %d MHz\n", entry->data.memory.Speed);
+                fprintf(output, "Manufacturer: %s\n", entry->data.memory.Manufacturer);
+                fprintf(output, "SerialNumber: %s\n", entry->data.memory.SerialNumber);
+                fprintf(output, "AssetTagNumber: %s\n", entry->data.memory.AssetTagNumber);
+                fprintf(output, "PartNumber: %s\n", entry->data.memory.PartNumber);
+                fprintf(output, "Size: %d MiB\n", entry->data.memory.Size);
+                fprintf(output, "ExtendedSize: %d MiB\n", entry->data.memory.ExtendedSize);
             }
             if (version >= smbios::SMBIOS_2_7)
             {
-                field(output, "ConfiguredClockSpeed", std::to_string(entry->data.memory.ConfiguredClockSpeed) + " MHz");
+                fprintf(output, "ConfiguredClockSpeed: %d\n", entry->data.memory.ConfiguredClockSpeed);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == TYPE_OEM_STRINGS)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "Count", (int) entry->data.oemstrings.Count);
-                output << "    Strings:" << std::endl;
+                fprintf(output, "Count: %d\n", (int) entry->data.oemstrings.Count);
+                fputs("\tStrings:\n", output);
                 const char *ptr = entry->data.oemstrings.Values;
                 int c = entry->data.oemstrings.Count;
-                while (ptr != nullptr && *ptr != 0 && c > 0)
+                while (ptr != nullptr && *ptr != 0 && c > 0) // TODO: replace with 'smbios_get_string'
                 {
-                    output << "        " << ptr << std::endl;
+                    fprintf(output, "\t\t%s\n", ptr);
                     while (*ptr != 0) ++ptr;
                     ++ptr;
                 }
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == TYPE_PORT_CONNECTOR)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "InternalReferenceDesignator", entry->data.portconn.InternalReferenceDesignator);
-                field(output, "InternalConnectorType", (int) entry->data.portconn.InternalConnectorType);
-                field(output, "ExternalReferenceDesignator", entry->data.portconn.ExternalReferenceDesignator);
-                field(output, "ExternalConnectorType", (int) entry->data.portconn.ExternalConnectorType);
-                field(output, "PortType", (int) entry->data.portconn.PortType);
+                fprintf(output, "InternalReferenceDesignator: %s\n", entry->data.portconn.InternalReferenceDesignator);
+                fprintf(output, "InternalConnectorType: %d\n", (int) entry->data.portconn.InternalConnectorType);
+                fprintf(output, "ExternalReferenceDesignator: %s\n", entry->data.portconn.ExternalReferenceDesignator);
+                fprintf(output, "ExternalConnectorType: %d\n", (int) entry->data.portconn.ExternalConnectorType);
+                fprintf(output, "PortType: %d\n", (int) entry->data.portconn.PortType);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == smbios::TYPE_MEMORY_ARRAY_MAPPED_ADDRESS)
         {
             if (version >= smbios::SMBIOS_2_1)
             {
-                field(output, "StartingAddress", entry->data.mamaddr.StartingAddress);
-                field(output, "EndingAddress", entry->data.mamaddr.EndingAddress);
-                field(output, "MemoryArrayHandle", entry->data.mamaddr.MemoryArrayHandle);
-                field(output, "PartitionWidth", (int) entry->data.mamaddr.PartitionWidth);
+                fprintf(output, "StartingAddress: %0X\n", entry->data.mamaddr.StartingAddress);
+                fprintf(output, "EndingAddress: %0X\n", entry->data.mamaddr.EndingAddress);
+                fprintf(output, "MemoryArrayHandle: %0X\n", entry->data.mamaddr.MemoryArrayHandle);
+                fprintf(output, "PartitionWidth: %0X\n", (int) entry->data.mamaddr.PartitionWidth);
             }
             if (version >= smbios::SMBIOS_2_7)
             {
-                field(output, "ExtendedStartingAddress", entry->data.mamaddr.ExtendedStartingAddress);
-                field(output, "ExtendedEndingAddress", entry->data.mamaddr.ExtendedEndingAddress);
+                fprintf(output, "ExtendedStartingAddress: %lX\n", entry->data.mamaddr.ExtendedStartingAddress);
+                fprintf(output, "ExtendedEndingAddress: %lX\n", entry->data.mamaddr.ExtendedEndingAddress);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == smbios::TYPE_MEMORY_DEVICE_MAPPED_ADDRESS)
         {
             if (version >= smbios::SMBIOS_2_1)
             {
-                field(output, "StartingAddress", entry->data.mdmaddr.StartingAddress);
-                field(output, "EndingAddress", entry->data.mdmaddr.EndingAddress);
-                field(output, "MemoryArrayHandle", entry->data.mdmaddr.MemoryDeviceHandle);
-                field(output, "MemoryArrayMappedAddressHandle", entry->data.mdmaddr.MemoryArrayMappedAddressHandle);
-                field(output, "PartitionRowPosition", (int) entry->data.mdmaddr.PartitionRowPosition);
-                field(output, "InterleavePosition", (int) entry->data.mdmaddr.InterleavePosition);
-                field(output, "InterleavedDataDepth", (int) entry->data.mdmaddr.InterleavedDataDepth);
+                fprintf(output, "StartingAddress: %d\n", entry->data.mdmaddr.StartingAddress);
+                fprintf(output, "EndingAddress: %d\n", entry->data.mdmaddr.EndingAddress);
+                fprintf(output, "MemoryArrayHandle: %d\n", entry->data.mdmaddr.MemoryDeviceHandle);
+                fprintf(output, "MemoryArrayMappedAddressHandle: %d\n", entry->data.mdmaddr.MemoryArrayMappedAddressHandle);
+                fprintf(output, "PartitionRowPosition: %d\n", (int) entry->data.mdmaddr.PartitionRowPosition);
+                fprintf(output, "InterleavePosition: %d\n", (int) entry->data.mdmaddr.InterleavePosition);
+                fprintf(output, "InterleavedDataDepth: %d\n", (int) entry->data.mdmaddr.InterleavedDataDepth);
             }
             if (version >= smbios::SMBIOS_2_7)
             {
-                field(output, "ExtendedStartingAddress", entry->data.mdmaddr.ExtendedStartingAddress);
-                field(output, "ExtendedEndingAddress", entry->data.mdmaddr.ExtendedEndingAddress);
+                fprintf(output, "ExtendedStartingAddress: %ld\n", entry->data.mdmaddr.ExtendedStartingAddress);
+                fprintf(output, "ExtendedEndingAddress: %ld\n", entry->data.mdmaddr.ExtendedEndingAddress);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == smbios::TYPE_MANAGEMENT_DEVICE)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "Description", entry->data.mdev.Description);
-                field(output, "Type", (int) entry->data.mdev.Type);
-                field(output, "Address", entry->data.mdev.Address);
-                field(output, "AddressType", (int) entry->data.mdev.AddressType);
+                fprintf(output, "Description: %s\n", entry->data.mdev.Description);
+                fprintf(output, "Type: %d\n", (int) entry->data.mdev.Type);
+                fprintf(output, "Address: %d\n", entry->data.mdev.Address);
+                fprintf(output, "AddressType: %d\n", (int) entry->data.mdev.AddressType);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == smbios::TYPE_MANAGEMENT_DEVICE_COMPONENT)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "Description", entry->data.mdcom.Description);
-                field(output, "ManagementDeviceHandle", (int) entry->data.mdcom.ManagementDeviceHandle);
-                field(output, "ComponentHandle", entry->data.mdcom.ComponentHandle);
-                field(output, "ThresholdHandle", (int) entry->data.mdcom.ThresholdHandle);
+                fprintf(output, "Description: %s\n", entry->data.mdcom.Description);
+                fprintf(output, "ManagementDeviceHandle: %d\n", (int) entry->data.mdcom.ManagementDeviceHandle);
+                fprintf(output, "ComponentHandle: %d\n", entry->data.mdcom.ComponentHandle);
+                fprintf(output, "ThresholdHandle: %d\n", (int) entry->data.mdcom.ThresholdHandle);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == smbios::TYPE_MANAGEMENT_DEVICE_THRESHOLD_DATA)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "LowerThresholdNonCritical", entry->data.mdtdata.LowerThresholdNonCritical);
-                field(output, "UpperThresholdNonCritical", entry->data.mdtdata.UpperThresholdNonCritical);
-                field(output, "LowerThresholdCritical", entry->data.mdtdata.LowerThresholdCritical);
-                field(output, "UpperThresholdCritical", entry->data.mdtdata.UpperThresholdCritical);
-                field(output, "LowerThresholdNonRecoverable", entry->data.mdtdata.LowerThresholdNonRecoverable);
-                field(output, "UpperThresholdNonRecoverable", entry->data.mdtdata.UpperThresholdNonRecoverable);
+                fprintf(output, "LowerThresholdNonCritical: %d\n", entry->data.mdtdata.LowerThresholdNonCritical);
+                fprintf(output, "UpperThresholdNonCritical: %d\n", entry->data.mdtdata.UpperThresholdNonCritical);
+                fprintf(output, "LowerThresholdCritical: %d\n", entry->data.mdtdata.LowerThresholdCritical);
+                fprintf(output, "UpperThresholdCritical: %d\n", entry->data.mdtdata.UpperThresholdCritical);
+                fprintf(output, "LowerThresholdNonRecoverable: %d\n", entry->data.mdtdata.LowerThresholdNonRecoverable);
+                fprintf(output, "UpperThresholdNonRecoverable: %d\n", entry->data.mdtdata.UpperThresholdNonRecoverable);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == smbios::TYPE_ONBOARD_DEVICES_EXTENDED_INFO)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                field(output, "ReferenceDesignation", entry->data.odeinfo.ReferenceDesignation);
-                field(output, "DeviceType", (int) entry->data.odeinfo.DeviceType);
-                field(output, "DeviceTypeInstance", (int) entry->data.odeinfo.DeviceTypeInstance);
-                field(output, "SegmentGroupNumber", entry->data.odeinfo.SegmentGroupNumber);
-                field(output, "BusNumber", (int) entry->data.odeinfo.BusNumber);
-                field(output, "DeviceOrFunctionNumber", (int) entry->data.odeinfo.DeviceOrFunctionNumber);
+                fprintf(output, "ReferenceDesignation: %s\n", entry->data.odeinfo.ReferenceDesignation);
+                fprintf(output, "DeviceType: %d\n", (int) entry->data.odeinfo.DeviceType);
+                fprintf(output, "DeviceTypeInstance: %d\n", (int) entry->data.odeinfo.DeviceTypeInstance);
+                fprintf(output, "SegmentGroupNumber: %d\n", entry->data.odeinfo.SegmentGroupNumber);
+                fprintf(output, "BusNumber: %d\n", (int) entry->data.odeinfo.BusNumber);
+                fprintf(output, "DeviceOrFunctionNumber: %d\n", (int) entry->data.odeinfo.DeviceOrFunctionNumber);
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         if (entry->type == smbios::TYPE_SYSTEM_BOOT_INFO)
         {
             if (version >= smbios::SMBIOS_2_0)
             {
-                output << " BootStatus: " << (int) entry->length <<  std::setfill('0') << std::endl;
+                fprintf(output, "BootStatus:\n");
                 if ((entry->length - 10) > 0)
                 {
                     int i = 0;
-                    output << std::hex;
                     for (; i < (entry->length - 10); ++i)
                     {
-                        if (i > 0 && (i % 16) == 0) output << std::endl;
-                        output << std::setw(2) << (int)entry->data.bootinfo.BootStatus[i] << ' ';
+                        if (i > 0 && (i % 16) == 0)
+                            fputs("\n", output);
+                        fprintf(output, "%02X ", (int)entry->data.bootinfo.BootStatus[i]);
                     }
-                    if ((i % 16) != 0) output << std::endl;
-                    output << std::dec;
+                    if ((i % 16) != 0)
+                        fputs("\n", output);
                 }
             }
-            output << std::endl;
+            fputs("\n", output);
         }
         else
         {
-            field(output, "Header and data", "");
+            fputs("\tHeader and data:\n", output);
             if (entry->length > 0)
             {
                 hexdump(output, entry->rawdata, entry->length);
@@ -429,16 +415,16 @@ bool printSMBIOS(
             const char *str = entry->strings;
             if (*str != 0)
             {
-                field(output, "Strings", "");
+                fputs("\tStrings:\n", output);
                 while (*str != 0)
                 {
-                    output << "        " << str << std::endl;
+                    fprintf(output, "\t\t%s\n", str);
                     while (*str != 0) ++str;
                     ++str;
                 }
             }
 
-            output << std::endl;
+            fputs("\n", output);
         }
     }
 
@@ -471,7 +457,7 @@ int main(int argc, char ** argv)
 
     ParserContext parser;
     if (smbios_initialize(&parser, buffer.data(), buffer.size(), SMBIOS_3_0) == SMBERR_OK)
-        printSMBIOS(&parser, std::cout);
+        printSMBIOS(&parser, stdout);
     else
         std::cerr << "Invalid SMBIOS data" << std::endl;
 
