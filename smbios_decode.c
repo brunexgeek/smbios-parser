@@ -465,5 +465,6 @@ int main(int argc, char ** argv)
     else
         fputs("Invalid SMBIOS data", stderr);
 
+    free(buffer);
     return 0;
 }
