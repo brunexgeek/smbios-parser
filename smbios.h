@@ -15,22 +15,31 @@
  * limitations under the License.
  */
 
-#ifndef DMI_PARSER_HH
-#define DMI_PARSER_HH
-
-#include <stddef.h>
-#include <stdint.h>
-#include <cstring>
+#ifndef DMI_PARSER_H
+#define DMI_PARSER_H
 
 #define SMBIOS_STRING(name)  uint8_t name##_; const char * name
 
-namespace smbios {
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
-static constexpr int SMBERR_OK = 0;
-static constexpr int SMBERR_INVALID_ARGUMENT = -1;
-static constexpr int SMBERR_INVALID_DATA = -2;
-static constexpr int SMBERR_END_OF_STREAM = -3;
-static constexpr int SMBERR_UNKNOWN_TYPE = -4;
+#ifdef _cplusplus
+#define CONSTEXPR constexpr
+#else
+#include <stdbool.h>
+#define CONSTEXPR const
+#endif
+
+#ifdef _cplusplus
+namespace smbios {
+#endif
+
+static CONSTEXPR int SMBERR_OK = 0;
+static CONSTEXPR int SMBERR_INVALID_ARGUMENT = -1;
+static CONSTEXPR int SMBERR_INVALID_DATA = -2;
+static CONSTEXPR int SMBERR_END_OF_STREAM = -3;
+static CONSTEXPR int SMBERR_UNKNOWN_TYPE = -4;
 
 enum EntryType
 {
@@ -319,23 +328,23 @@ struct Entry
 	uint16_t handle;
     union
     {
-        ProcessorInfo processor;
-        BaseboardInfo baseboard;
-        SystemInfo sysinfo;
-        BiosInfo bios;
-        SystemEnclosure sysenclosure;
-        PhysicalMemoryArray physmem;
-        MemoryDevice memory;
-		SystemSlot sysslot;
-		OemStrings oemstrings;
-		PortConnector portconn;
-		MemoryArrayMappedAddress mamaddr;
-		MemoryDeviceMappedAddress mdmaddr;
-		SystemBootInfo bootinfo;
-		ManagementDevice mdev;
-		ManagementDeviceComponent mdcom;
-		ManagementDeviceThresholdData mdtdata;
-		OnboardDevicesExtendedInfo odeinfo;
+        struct ProcessorInfo processor;
+        struct BaseboardInfo baseboard;
+        struct SystemInfo sysinfo;
+        struct BiosInfo bios;
+        struct SystemEnclosure sysenclosure;
+        struct PhysicalMemoryArray physmem;
+        struct MemoryDevice memory;
+		struct SystemSlot sysslot;
+		struct OemStrings oemstrings;
+		struct PortConnector portconn;
+		struct MemoryArrayMappedAddress mamaddr;
+		struct MemoryDeviceMappedAddress mdmaddr;
+		struct SystemBootInfo bootinfo;
+		struct ManagementDevice mdev;
+		struct ManagementDeviceComponent mdcom;
+		struct ManagementDeviceThresholdData mdtdata;
+		struct OnboardDevicesExtendedInfo odeinfo;
     } data;
 	const uint8_t *rawdata;
 	const char *strings;
@@ -366,18 +375,19 @@ struct ParserContext
 	const uint8_t *eend;
 	size_t size;
 	int version;
-	Entry entry;
+	struct Entry entry;
 	bool failed;
 };
 
-int smbios_initialize(ParserContext *context, const uint8_t *data, size_t size, int version );
-int smbios_next(ParserContext *context, const Entry **entry);
-int smbios_reset(ParserContext * context);
-int smbios_get_version(ParserContext *context);
-bool smbios_valid(ParserContext *context);
+int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, int version );
+int smbios_next(struct ParserContext *context, const struct Entry **entry);
+int smbios_reset(struct ParserContext * context);
+int smbios_get_version(struct ParserContext *context);
 
+#ifdef _cplusplus
 } // namespace smbios
+#endif
 
 #undef SMBIOS_STRING
 
-#endif // DMI_PARSER_HH
+#endif // DMI_PARSER_H
