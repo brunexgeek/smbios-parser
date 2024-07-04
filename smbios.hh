@@ -28,10 +28,31 @@ namespace smbios {
 
 static constexpr int SMBERR_OK = 0;
 static constexpr int SMBERR_INVALID_ARGUMENT = -1;
-static constexpr int SMBERR_INVALID_SMBIOS_DATA = -2;
+static constexpr int SMBERR_INVALID_DATA = -2;
 static constexpr int SMBERR_END_OF_STREAM = -3;
+static constexpr int SMBERR_UNKNOWN_TYPE = -4;
 
-static const int TYPE_BIOS_INFO = 0;
+enum EntryType
+{
+	TYPE_BIOS_INFO = 0,
+	TYPE_SYSTEM_INFO = 1,
+	TYPE_BASEBOARD_INFO = 2,
+	TYPE_SYSTEM_ENCLOSURE = 3,
+	TYPE_PROCESSOR_INFO = 4,
+	TYPE_PORT_CONNECTOR = 8,
+	TYPE_SYSTEM_SLOT = 9,
+	TYPE_OEM_STRINGS = 11,
+	TYPE_PHYSICAL_MEMORY_ARRAY = 16,
+	TYPE_MEMORY_DEVICE = 17,
+	TYPE_MEMORY_ARRAY_MAPPED_ADDRESS = 19,
+	TYPE_MEMORY_DEVICE_MAPPED_ADDRESS = 20,
+	TYPE_SYSTEM_BOOT_INFO = 32,
+	TYPE_MANAGEMENT_DEVICE = 34,
+	TYPE_MANAGEMENT_DEVICE_COMPONENT = 35,
+	TYPE_MANAGEMENT_DEVICE_THRESHOLD_DATA = 36,
+	TYPE_ONBOARD_DEVICES_EXTENDED_INFO = 41,
+};
+
 struct BiosInfo
 {
 	SMBIOS_STRING(Vendor);
@@ -48,7 +69,6 @@ struct BiosInfo
 	uint8_t EmbeddedFirmwareMinorRelease;
 };
 
-const static int TYPE_SYSTEM_INFO = 1;
 struct SystemInfo
 {
 	// 2.0+
@@ -64,7 +84,6 @@ struct SystemInfo
 	SMBIOS_STRING(Family);
 };
 
-const static int TYPE_BASEBOARD_INFO = 2;
 struct BaseboardInfo
 {
 	// 2.0+
@@ -81,7 +100,6 @@ struct BaseboardInfo
 	uint16_t *ContainedObjectHandles;
 };
 
-const static int TYPE_SYSTEM_ENCLOSURE = 3;
 struct SystemEnclosure
 {
 	// 2.0+
@@ -106,7 +124,6 @@ struct SystemEnclosure
 	SMBIOS_STRING(SKUNumber);
 };
 
-const static int TYPE_PROCESSOR_INFO = 4;
 struct ProcessorInfo
 {
 	// 2.0+
@@ -143,7 +160,6 @@ struct ProcessorInfo
 	uint16_t ThreadCount2;
 };
 
-const static int TYPE_PORT_CONNECTOR = 8;
 struct PortConnector
 {
 	SMBIOS_STRING(InternalReferenceDesignator);
@@ -153,7 +169,6 @@ struct PortConnector
 	uint8_t PortType;
 };
 
-const static int TYPE_SYSTEM_SLOT = 9;
 struct SystemSlot
 {
 	// 2.0+
@@ -172,7 +187,6 @@ struct SystemSlot
 	uint8_t DeviceOrFunctionNumber;
 };
 
-const static int TYPE_OEM_STRINGS = 11;
 struct OemStrings
 {
 	// 2.0+
@@ -180,7 +194,6 @@ struct OemStrings
 	const char *Values;
 };
 
-const static int TYPE_PHYSICAL_MEMORY_ARRAY = 16;
 struct PhysicalMemoryArray
 {
     // 2.1+
@@ -194,7 +207,6 @@ struct PhysicalMemoryArray
     uint64_t ExtendedMaximumCapacity;
 };
 
-const static int TYPE_MEMORY_DEVICE = 17;
 struct MemoryDevice
 {
     // 2.1+
@@ -226,7 +238,6 @@ struct MemoryDevice
 	uint16_t ConfiguredVoltage;
 };
 
-const static int TYPE_MEMORY_ARRAY_MAPPED_ADDRESS = 19;
 struct MemoryArrayMappedAddress
 {
 	// 2.1+
@@ -239,7 +250,6 @@ struct MemoryArrayMappedAddress
 	uint64_t ExtendedEndingAddress;
 };
 
-const static int TYPE_MEMORY_DEVICE_MAPPED_ADDRESS = 20;
 struct MemoryDeviceMappedAddress
 {
 	// 2.1+
@@ -255,7 +265,6 @@ struct MemoryDeviceMappedAddress
 	uint64_t ExtendedEndingAddress;
 };
 
-const static int TYPE_SYSTEM_BOOT_INFO = 32;
 struct SystemBootInfo
 {
 	// 2.0+
@@ -263,7 +272,6 @@ struct SystemBootInfo
 	const uint8_t *BootStatus;
 };
 
-const static int TYPE_MANAGEMENT_DEVICE = 34;
 struct ManagementDevice
 {
 	// 2.0+
@@ -273,7 +281,6 @@ struct ManagementDevice
 	uint8_t AddressType;
 };
 
-const static int TYPE_MANAGEMENT_DEVICE_COMPONENT = 35;
 struct ManagementDeviceComponent
 {
 	// 2.0+
@@ -283,7 +290,6 @@ struct ManagementDeviceComponent
 	uint16_t ThresholdHandle;
 };
 
-const static int TYPE_MANAGEMENT_DEVICE_THRESHOLD_DATA = 36;
 struct ManagementDeviceThresholdData
 {
 	// 2.0+
@@ -295,7 +301,6 @@ struct ManagementDeviceThresholdData
 	uint16_t UpperThresholdNonRecoverable;
 };
 
-const static int TYPE_ONBOARD_DEVICES_EXTENDED_INFO = 41;
 struct OnboardDevicesExtendedInfo
 {
 	// 2.0+
