@@ -15,14 +15,15 @@
  * limitations under the License.
  */
 
-#include "smbios.hh"
-#include <vector>
+#include "smbios.h"
 #include <stdio.h>
 
 #define DMI_ENTRY_HEADER_SIZE   4
 #define VALID_VERSION(x) (((x) >= SMBIOS_2_0 && (x) <= SMBIOS_2_8) || (x) == SMBIOS_3_0)
 
+#ifdef _cplusplus
 namespace smbios {
+#endif
 
 #ifdef _WIN32
 
@@ -39,16 +40,16 @@ struct RawSMBIOSData
 };
 #endif
 
-int smbios_initialize(ParserContext *context, const uint8_t *data, size_t size, int version )
+int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, int version )
 {
     // we need at least the smbios header for now
     if (size < 32)
         return SMBERR_INVALID_DATA;
 
-    memset(context, 0, sizeof(ParserContext));
+    memset(context, 0, sizeof(struct ParserContext));
     context->data  = data + 32;
     context->size = size - 32;
-    context->ptr = nullptr;
+    context->ptr = NULL;
     context->version = VALID_VERSION(version) ? SMBIOS_3_0 : version;
     int vn = 0;
 
@@ -106,7 +107,7 @@ int smbios_initialize(ParserContext *context, const uint8_t *data, size_t size, 
     return SMBERR_OK;
 }
 
-static const char *smbios_get_string( ParserContext *context, int index )
+static const char *smbios_get_string( struct ParserContext *context, int index )
 {
     if (index <= 0 || index > context->entry.string_count)
         return "";
@@ -121,13 +122,13 @@ static const char *smbios_get_string( ParserContext *context, int index )
     return ptr;
 }
 
-int smbios_reset( ParserContext *context )
+int smbios_reset( struct ParserContext *context )
 {
-    context->ptr = context->estart = context->eend = nullptr;
+    context->ptr = context->estart = context->eend = NULL;
     return SMBERR_OK;
 }
 
-static uint8_t read_uint8(ParserContext *context)
+static uint8_t read_uint8(struct ParserContext *context)
 {
     if (context->ptr + 1 >= context->eend)
     {
@@ -137,22 +138,22 @@ static uint8_t read_uint8(ParserContext *context)
     return *context->ptr++;
 }
 
-static uint16_t read_uint16(ParserContext *context)
+static uint16_t read_uint16(struct ParserContext *context)
 {
     return read_uint8(context) | (read_uint8(context) << 8);
 }
 
-static uint32_t read_uint32(ParserContext *context)
+static uint32_t read_uint32(struct ParserContext *context)
 {
     return read_uint16(context) | ((uint32_t)read_uint16(context) << 16);
 }
 
-static uint64_t read_uint64(ParserContext *context)
+static uint64_t read_uint64(struct ParserContext *context)
 {
     return read_uint32(context) | ((uint64_t)read_uint32(context) << 32);
 }
 
-static void parse_bios_info(ParserContext *context)
+static void parse_bios_info(struct ParserContext *context)
 {
     // 2.0+
     if (context->version >= SMBIOS_2_0)
@@ -181,7 +182,7 @@ static void parse_bios_info(ParserContext *context)
     }
 }
 
-static void parse_system_info(ParserContext *context)
+static void parse_system_info(struct ParserContext *context)
 {
     // 2.0+
     if (context->version >= SMBIOS_2_0)
@@ -214,7 +215,7 @@ static void parse_system_info(ParserContext *context)
     }
 }
 
-static void parse_baseboard_info(ParserContext *context)
+static void parse_baseboard_info(struct ParserContext *context)
 {
     // 2.0+
     if (context->version >= SMBIOS_2_0)
@@ -241,7 +242,7 @@ static void parse_baseboard_info(ParserContext *context)
     }
 }
 
-static void parse_system_enclosure(ParserContext *context)
+static void parse_system_enclosure(struct ParserContext *context)
 {
     // 2.0+
     if (context->version >= SMBIOS_2_0)
@@ -285,10 +286,10 @@ static void parse_system_enclosure(ParserContext *context)
     }
 }
 
-static void parse_processor_info(ParserContext *context)
+static void parse_processor_info(struct ParserContext *context)
 {
     // 2.0+
-    if (context->version >= smbios::SMBIOS_2_0)
+    if (context->version >= SMBIOS_2_0)
     {
         context->entry.data.processor.SocketDesignation_ = read_uint8(context);
         context->entry.data.processor.ProcessorType = read_uint8(context);
@@ -309,14 +310,14 @@ static void parse_processor_info(ParserContext *context)
         context->entry.data.processor.ProcessorVersion      = smbios_get_string(context, context->entry.data.processor.ProcessorVersion_);
     }
     // 2.1+
-    if (context->version >= smbios::SMBIOS_2_1)
+    if (context->version >= SMBIOS_2_1)
     {
         context->entry.data.processor.L1CacheHandle = read_uint16(context);
         context->entry.data.processor.L2CacheHandle = read_uint16(context);
         context->entry.data.processor.L3CacheHandle = read_uint16(context);
     }
     // 2.3+
-    if (context->version >= smbios::SMBIOS_2_3)
+    if (context->version >= SMBIOS_2_3)
     {
         context->entry.data.processor.SerialNumber_ = read_uint8(context);
         context->entry.data.processor.AssetTagNumber_ = read_uint8(context);
@@ -327,7 +328,7 @@ static void parse_processor_info(ParserContext *context)
         context->entry.data.processor.PartNumber = smbios_get_string(context, context->entry.data.processor.PartNumber_);
     }
     // 2.5+
-    if (context->version >= smbios::SMBIOS_2_5)
+    if (context->version >= SMBIOS_2_5)
     {
         context->entry.data.processor.CoreCount = read_uint8(context);
         context->entry.data.processor.CoreEnabled = read_uint8(context);
@@ -335,12 +336,12 @@ static void parse_processor_info(ParserContext *context)
         context->entry.data.processor.ProcessorCharacteristics = read_uint16(context);
     }
     //2.6+
-    if (context->version >= smbios::SMBIOS_2_6)
+    if (context->version >= SMBIOS_2_6)
     {
         context->entry.data.processor.ProcessorFamily2 = read_uint16(context);
     }
     //3.0+
-    if (context->version >= smbios::SMBIOS_3_0)
+    if (context->version >= SMBIOS_3_0)
     {
         context->entry.data.processor.CoreCount2 = read_uint16(context);
         context->entry.data.processor.CoreEnabled2 = read_uint16(context);
@@ -348,10 +349,10 @@ static void parse_processor_info(ParserContext *context)
     }
 }
 
-static void parse_system_slot(ParserContext *context)
+static void parse_system_slot(struct ParserContext *context)
 {
     // 2.0+
-    if (context->version >= smbios::SMBIOS_2_0)
+    if (context->version >= SMBIOS_2_0)
     {
         context->entry.data.sysslot.SlotDesignation_ = read_uint8(context);
         context->entry.data.sysslot.SlotType = read_uint8(context);
@@ -364,12 +365,12 @@ static void parse_system_slot(ParserContext *context)
         context->entry.data.sysslot.SlotDesignation = smbios_get_string(context, context->entry.data.sysslot.SlotDesignation_);
     }
     // 2.1+
-    if (context->version >= smbios::SMBIOS_2_1)
+    if (context->version >= SMBIOS_2_1)
     {
         context->entry.data.sysslot.SlotCharacteristics2 = read_uint8(context);
     }
     // 2.6+
-    if (context->version >= smbios::SMBIOS_2_6)
+    if (context->version >= SMBIOS_2_6)
     {
         context->entry.data.sysslot.SegmentGroupNumber = read_uint16(context);
         context->entry.data.sysslot.BusNumber = read_uint8(context);
@@ -377,10 +378,10 @@ static void parse_system_slot(ParserContext *context)
     }
 }
 
-static void parse_physical_memory_array(ParserContext *context)
+static void parse_physical_memory_array(struct ParserContext *context)
 {
     // 2.1+
-    if (context->version >= smbios::SMBIOS_2_1)
+    if (context->version >= SMBIOS_2_1)
     {
         context->entry.data.physmem.Location = read_uint8(context);
         context->entry.data.physmem.Use = read_uint8(context);
@@ -390,16 +391,16 @@ static void parse_physical_memory_array(ParserContext *context)
         context->entry.data.physmem.NumberDevices = read_uint16(context);
     }
     // 2.7+
-    if (context->version >= smbios::SMBIOS_2_7)
+    if (context->version >= SMBIOS_2_7)
     {
         context->entry.data.physmem.ExtendedMaximumCapacity = read_uint64(context);
     }
 }
 
-static void parse_memory_device(ParserContext *context)
+static void parse_memory_device(struct ParserContext *context)
 {
     // 2.1+
-    if (context->version >= smbios::SMBIOS_2_1)
+    if (context->version >= SMBIOS_2_1)
     {
         context->entry.data.memory.PhysicalArrayHandle = read_uint16(context);
         context->entry.data.memory.ErrorInformationHandle = read_uint16(context);
@@ -417,7 +418,7 @@ static void parse_memory_device(ParserContext *context)
         context->entry.data.memory.BankLocator    = smbios_get_string(context, context->entry.data.memory.BankLocator_);
     }
     // 2.3+
-    if (context->version >= smbios::SMBIOS_2_3)
+    if (context->version >= SMBIOS_2_3)
     {
         context->entry.data.memory.Speed = read_uint16(context);
         context->entry.data.memory.Manufacturer_ = read_uint8(context);
@@ -431,18 +432,18 @@ static void parse_memory_device(ParserContext *context)
         context->entry.data.memory.PartNumber     = smbios_get_string(context, context->entry.data.memory.PartNumber_);
     }
     // 2.6+
-    if (context->version >= smbios::SMBIOS_2_6)
+    if (context->version >= SMBIOS_2_6)
     {
         context->entry.data.memory.Attributes = read_uint8(context);
     }
     // 2.7+
-    if (context->version >= smbios::SMBIOS_2_7)
+    if (context->version >= SMBIOS_2_7)
     {
         context->entry.data.memory.ExtendedSize = read_uint32(context);
         context->entry.data.memory.ConfiguredClockSpeed = read_uint16(context);
     }
     // 2.8+
-    if (context->version >= smbios::SMBIOS_2_8)
+    if (context->version >= SMBIOS_2_8)
     {
         context->entry.data.memory.MinimumVoltage = read_uint16(context);
         context->entry.data.memory.MaximumVoltage = read_uint16(context);
@@ -450,20 +451,20 @@ static void parse_memory_device(ParserContext *context)
     }
 }
 
-static void parse_oem_strings(ParserContext *context)
+static void parse_oem_strings(struct ParserContext *context)
 {
     // 2.0+
-    if (context->version >= smbios::SMBIOS_2_0)
+    if (context->version >= SMBIOS_2_0)
     {
         context->entry.data.oemstrings.Count = read_uint8(context);
         context->entry.data.oemstrings.Values = (const char*) context->ptr;
     }
 }
 
-static void parse_port_connector(ParserContext *context)
+static void parse_port_connector(struct ParserContext *context)
 {
     // 2.0+
-    if (context->version >= smbios::SMBIOS_2_0)
+    if (context->version >= SMBIOS_2_0)
     {
         context->entry.data.portconn.InternalReferenceDesignator_ = read_uint8(context);
         context->entry.data.portconn.InternalConnectorType = read_uint8(context);
@@ -476,25 +477,25 @@ static void parse_port_connector(ParserContext *context)
     }
 }
 
-static void parse_memory_array_mapped_address(ParserContext *context)
+static void parse_memory_array_mapped_address(struct ParserContext *context)
 {
-    if (context->version >= smbios::SMBIOS_2_1)
+    if (context->version >= SMBIOS_2_1)
     {
         context->entry.data.mamaddr.StartingAddress = read_uint32(context);
         context->entry.data.mamaddr.EndingAddress = read_uint32(context);
         context->entry.data.mamaddr.MemoryArrayHandle = read_uint16(context);
         context->entry.data.mamaddr.PartitionWidth = read_uint8(context);
     }
-    if (context->version >= smbios::SMBIOS_2_7)
+    if (context->version >= SMBIOS_2_7)
     {
         context->entry.data.mamaddr.ExtendedStartingAddress = read_uint64(context);
         context->entry.data.mamaddr.ExtendedEndingAddress = read_uint64(context);
     }
 }
 
-static void parse_memory_device_mapped_address(ParserContext *context)
+static void parse_memory_device_mapped_address(struct ParserContext *context)
 {
-    if (context->version >= smbios::SMBIOS_2_1)
+    if (context->version >= SMBIOS_2_1)
     {
         context->entry.data.mdmaddr.StartingAddress = read_uint32(context);
         context->entry.data.mdmaddr.EndingAddress = read_uint32(context);
@@ -504,7 +505,7 @@ static void parse_memory_device_mapped_address(ParserContext *context)
         context->entry.data.mdmaddr.InterleavePosition = read_uint8(context);
         context->entry.data.mdmaddr.InterleavedDataDepth = read_uint8(context);
     }
-    if (context->version >= smbios::SMBIOS_2_7)
+    if (context->version >= SMBIOS_2_7)
     {
         context->entry.data.mdmaddr.ExtendedStartingAddress = read_uint64(context);
         context->entry.data.mdmaddr.ExtendedEndingAddress = read_uint64(context);
@@ -512,18 +513,18 @@ static void parse_memory_device_mapped_address(ParserContext *context)
 }
 
 
-static void parse_system_boot_info(ParserContext *context)
+static void parse_system_boot_info(struct ParserContext *context)
 {
-    if (context->version >= smbios::SMBIOS_2_0)
+    if (context->version >= SMBIOS_2_0)
     {
         context->ptr += sizeof(context->entry.data.bootinfo.Reserved);
         context->entry.data.bootinfo.BootStatus = context->ptr;
     }
 }
 
-static void parse_management_device(ParserContext *context)
+static void parse_management_device(struct ParserContext *context)
 {
-    if (context->version >= smbios::SMBIOS_2_0)
+    if (context->version >= SMBIOS_2_0)
     {
         context->entry.data.mdev.Description_ = read_uint8(context);
         context->entry.data.mdev.Type = read_uint8(context);
@@ -534,9 +535,9 @@ static void parse_management_device(ParserContext *context)
     }
 }
 
-static void parse_management_device_component(ParserContext *context)
+static void parse_management_device_component(struct ParserContext *context)
 {
-    if (context->version >= smbios::SMBIOS_2_0)
+    if (context->version >= SMBIOS_2_0)
     {
         context->entry.data.mdcom.Description_ = read_uint8(context);
         context->entry.data.mdcom.ManagementDeviceHandle = read_uint16(context);
@@ -547,9 +548,9 @@ static void parse_management_device_component(ParserContext *context)
     }
 }
 
-static void parse_management_device_threshold_data(ParserContext *context)
+static void parse_management_device_threshold_data(struct ParserContext *context)
 {
-    if (context->version >= smbios::SMBIOS_2_0)
+    if (context->version >= SMBIOS_2_0)
     {
         context->entry.data.mdtdata.LowerThresholdNonCritical = read_uint16(context);
         context->entry.data.mdtdata.UpperThresholdNonCritical = read_uint16(context);
@@ -561,9 +562,9 @@ static void parse_management_device_threshold_data(ParserContext *context)
 }
 
 
-static void parse_onboard_devices_extended_info(ParserContext *context)
+static void parse_onboard_devices_extended_info(struct ParserContext *context)
 {
-    if (context->version >= smbios::SMBIOS_2_0)
+    if (context->version >= SMBIOS_2_0)
     {
         context->entry.data.odeinfo.ReferenceDesignation_ = read_uint8(context);
         context->entry.data.odeinfo.DeviceType = read_uint8(context);
@@ -576,9 +577,9 @@ static void parse_onboard_devices_extended_info(ParserContext *context)
     }
 }
 
-static int parse_entry(ParserContext *context, const Entry **entry)
+static int parse_entry(struct ParserContext *context, const struct Entry **entry)
 {
-    if (entry == nullptr)
+    if (entry == NULL)
         return SMBERR_INVALID_ARGUMENT;
     if (context->failed)
         return SMBERR_INVALID_DATA;
@@ -647,15 +648,15 @@ static int parse_entry(ParserContext *context, const Entry **entry)
     return SMBERR_OK;
 }
 
-int smbios_next(ParserContext *context, const Entry **entry)
+int smbios_next(struct ParserContext *context, const struct Entry **entry)
 {
-    if (context == nullptr || entry == nullptr)
+    if (context == NULL || entry == NULL)
         return SMBERR_INVALID_ARGUMENT;
-    if (context->data == nullptr)
+    if (context->data == NULL)
         return SMBERR_INVALID_DATA;
 
     // jump to the next field
-    if (context->estart == nullptr)
+    if (context->estart == NULL)
         context->estart = context->ptr = context->data;
     else
         context->estart = context->ptr = context->eend;
@@ -699,15 +700,11 @@ int smbios_next(ParserContext *context, const Entry **entry)
     return parse_entry(context, entry);
 }
 
-int smbios_get_version(ParserContext *context)
+int smbios_get_version(struct ParserContext *context)
 {
     return context->version;
 }
 
-bool smbios_valid(ParserContext *context)
-{
-    return context->data != nullptr;
-}
-
-
+#ifdef _cplusplus
 } // namespace smbios
+#endif
