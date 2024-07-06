@@ -24,6 +24,18 @@
 #include <stdint.h>
 #include <string.h>
 
+#if defined(WIN32) || defined(_WIN32) || defined(WINNT) || defined(_WINNT) || defined(WIN64) || defined(_WIN64)
+	#undef SMBIOS_WINDOWS
+	#define SMBIOS_WINDOWS   1
+#endif
+
+#undef SMBIOS_EXPORT
+#ifdef SMBIOS_WINDOWS
+	#define SMBIOS_EXPORT                  __declspec(dllexport)
+#else
+	#define SMBIOS_EXPORT                  __attribute__ ((visibility("default")))
+#endif
+
 #ifdef _cplusplus
 #define SMBIOS_CONSTEXPR constexpr
 #else
@@ -401,7 +413,7 @@ struct ParserContext
  * @param version Preferred SMBIOS version.
  * @return SMBERR_OK on success or a negative error code.
  */
-int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, enum SpecVersion version );
+SMBIOS_EXPORT int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, enum SpecVersion version );
 
 /**
  * Get the next SMBIOS entry.
@@ -412,7 +424,7 @@ int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t
  * @param entry Pointer to the entry.
  * @return SMBERR_OK on success or a negative error code.
  */
-int smbios_next(struct ParserContext *context, const struct Entry **entry);
+SMBIOS_EXPORT int smbios_next(struct ParserContext *context, const struct Entry **entry);
 
 /**
  * Reset the SMBIOS parser and let it start from the beginning.
@@ -422,7 +434,7 @@ int smbios_next(struct ParserContext *context, const struct Entry **entry);
  * @param context Parser context.
  * @return SMBERR_OK on success or a negative error code.
  */
-int smbios_reset(struct ParserContext * context);
+SMBIOS_EXPORT int smbios_reset(struct ParserContext * context);
 
 /**
  * Returns the selected and/or the original SMBIOS versions.
@@ -432,7 +444,7 @@ int smbios_reset(struct ParserContext * context);
  * @param original (optional) Version of the SMBIOS data.
  * @return SMBERR_OK on success or a negative error code.
  */
-int smbios_get_version(struct ParserContext *context, enum SpecVersion *selected, enum SpecVersion *original);
+SMBIOS_EXPORT int smbios_get_version(struct ParserContext *context, enum SpecVersion *selected, enum SpecVersion *original);
 
 /**
  * Returns a string from the SMBIOS entry.
@@ -454,12 +466,14 @@ int smbios_get_version(struct ParserContext *context, enum SpecVersion *selected
  * @param index Index of the string, starting from 1.
  * @return String associated with the given index or NULL in case of error.
  */
-const char *smbios_get_string( const struct Entry *entry, int index );
+SMBIOS_EXPORT const char *smbios_get_string( const struct Entry *entry, int index );
 
 #ifdef _cplusplus
 } // namespace smbios
 #endif
 
 #undef SMBIOS_STRING
+#undef SMBIOS_WINDOWS
+#undef SMBIOS_EXPORT
 
 #endif // SMBIOS_PARSER_H
