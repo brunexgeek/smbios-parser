@@ -388,13 +388,17 @@ struct ParserContext
 };
 
 /**
- * Initialize the SMBIOS parser
+ * Initialize the SMBIOS parser.
+ *
+ * If the actual version of the SMBIOS data is smaller than the value of the parameter
+ * 'version', the parser will use the version of the SMBIOS data. Fields related to
+ * SMBIOS versions not selected will be left blank. Valid values are the ones defined
+ * in the enumeration 'SpecVersion'.
  *
  * @param context Parser context.
  * @param data SMBIOS data.
  * @param size Size of the SMBIOS data.
- * @param version Preferred SMBIOS version. If the actual version of the SMBIOS data is smaller than this version,
- *    the parser will use the version of the SMBIOS data. Valid values are the one defined in enum 'SpecVersion'.
+ * @param version Preferred SMBIOS version.
  * @return SMBERR_OK on success or a negative error code.
  */
 int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, enum SpecVersion version );
@@ -402,7 +406,7 @@ int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t
 /**
  * Get the next SMBIOS entry.
  *
- * Calling this function invalidates the previously returned entry.
+ * Calling this function invalidates any previously returned entry.
  *
  * @param context Parser context.
  * @param entry Pointer to the entry.
@@ -421,21 +425,34 @@ int smbios_next(struct ParserContext *context, const struct Entry **entry);
 int smbios_reset(struct ParserContext * context);
 
 /**
- * Get the selected SMBIOS version.
+ * Returns the selected and/or the original SMBIOS versions.
  *
  * @param context Parser context.
- * @param selected Selected version used to parse the SMBIOS data.
- * @param original Version of the SMBIOS data.
+ * @param selected (optional) Selected version used to parse the SMBIOS data.
+ * @param original (optional) Version of the SMBIOS data.
  * @return SMBERR_OK on success or a negative error code.
  */
 int smbios_get_version(struct ParserContext *context, enum SpecVersion *selected, enum SpecVersion *original);
 
 /**
- * Get a string from the SMBIOS entry.
+ * Returns a string from the SMBIOS entry.
+ *
+ * Fields in the entry that reference a string are automatically set with the corresponding string pointer.
+ * However, some entry types have an arbitrary number of strings not pointed by entry fields (e.g. the
+ * 'OEMStrings' entry type). In this case, you can use this function to retrieve them.
+ *
+ * This is a utility function to retrieve a string from the SMBIOS entry. The function will iterate over the
+ * strings in the SMBIOS entry and return the string with the given index, starting from 1. If the index is
+ * out of range, the function will return NULL.
+ *
+ * If you want to avoid the overhead of the iteration for each call, you can access the string table directly.
+ * The start of the string table is set in the field 'strings' of the entry. Each string is terminated with a
+ * null (00h) byte and the table is terminated with an additional null (00h) byte. The amount of strings is
+ * given in the field 'string_count' of the entry.
  *
  * @param entry SMBIOS entry.
  * @param index Index of the string, starting from 1.
- * @return String associated with the index or NULL in case of error.
+ * @return String associated with the given index or NULL in case of error.
  */
 const char *smbios_get_string( const struct Entry *entry, int index );
 

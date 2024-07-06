@@ -195,6 +195,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
             if (version >= SMBIOS_2_0)
             {
                 fprintf(output, "\tSocketDesignation: %s\n", entry->data.processor.SocketDesignation);
+                fprintf(output, "\tProcessorType: %d\n", (int) entry->data.processor.ProcessorType);
                 fprintf(output, "\tProcessorFamily: %d\n", (int) entry->data.processor.ProcessorFamily);
                 fprintf(output, "\tProcessorManufacturer: %s\n", entry->data.processor.ProcessorManufacturer);
                 fprintf(output, "\tProcessorVersion: %s\n", entry->data.processor.ProcessorVersion);
@@ -202,16 +203,40 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
                 for (int i = 0; i < 8; ++i)
                     fprintf(output, " %02X", entry->data.processor.ProcessorID[i]);
                 fputs("\n", output);
+                fprintf(output, "\tVoltage: %d", entry->data.processor.Voltage);
+                fprintf(output, "\tExternalClock: %d", entry->data.processor.ExternalClock);
+                fprintf(output, "\tMaxSpeed: %d", entry->data.processor.MaxSpeed);
+                fprintf(output, "\tCurrentSpeed: %d", entry->data.processor.CurrentSpeed);
+                fprintf(output, "\tStatus: %d", entry->data.processor.Status);
+                fprintf(output, "\tProcessorUpgrade: %d", entry->data.processor.ProcessorUpgrade);
             }
-            if (version >= SMBIOS_2_5)
+            if (version >= SMBIOS_2_1)
             {
-                fprintf(output, "\tCoreCount: %d\n", (int) entry->data.processor.CoreCount);
-                fprintf(output, "\tCoreEnabled: %d\n", (int) entry->data.processor.CoreEnabled);
-                fprintf(output, "\tThreadCount: %d\n", (int) entry->data.processor.ThreadCount);
+                fprintf(output, "\t L1CacheHandle: %d", entry->data.processor.L1CacheHandle);
+                fprintf(output, "\t L2CacheHandle: %d", entry->data.processor.L2CacheHandle);
+                fprintf(output, "\t L3CacheHandle: %d", entry->data.processor.L3CacheHandle);
+            }
+            if (version >= SMBIOS_2_3)
+            {
+                fprintf(output, "\t SerialNumber: %s", entry->data.processor.SerialNumber);
+                fprintf(output, "\t AssetTagNumber: %s", entry->data.processor.AssetTagNumber);
+                fprintf(output, "\t PartNumber: %s", entry->data.processor.PartNumber);
+            }
+            if (version >= SMBIOS_2_3)
+            {
+                fprintf(output, "\t SerialNumber: %s", entry->data.processor.SerialNumber);
+                fprintf(output, "\t AssetTagNumber: %s", entry->data.processor.AssetTagNumber);
+                fprintf(output, "\t PartNumber: %s", entry->data.processor.PartNumber);
             }
             if (version >= SMBIOS_2_6)
             {
                 fprintf(output, "\tProcessorFamily2: %d\n", entry->data.processor.ProcessorFamily2);
+            }
+            if (version >= SMBIOS_3_0)
+            {
+                fprintf(output, "\t CoreCount2: %d", entry->data.processor.CoreCount2);
+                fprintf(output, "\t CoreEnabled2: %d", entry->data.processor.CoreEnabled2);
+                fprintf(output, "\t ThreadCount2: %d", entry->data.processor.ThreadCount2);
             }
             fputs("\n", output);
         }
