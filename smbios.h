@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Bruno Ribeiro
+ * Copyright 2019-2024 Bruno Costa
  * https://github.com/brunexgeek/smbios-parser
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef DMI_PARSER_H
-#define DMI_PARSER_H
+#ifndef SMBIOS_PARSER_H
+#define SMBIOS_PARSER_H
 
 #define SMBIOS_STRING(name)  uint8_t name##_; const char * name
 
@@ -25,21 +25,21 @@
 #include <string.h>
 
 #ifdef _cplusplus
-#define CONSTEXPR constexpr
+#define SMBIOS_CONSTEXPR constexpr
 #else
 #include <stdbool.h>
-#define CONSTEXPR const
+#define SMBIOS_CONSTEXPR const
 #endif
 
 #ifdef _cplusplus
 namespace smbios {
 #endif
 
-static CONSTEXPR int SMBERR_OK = 0;
-static CONSTEXPR int SMBERR_INVALID_ARGUMENT = -1;
-static CONSTEXPR int SMBERR_INVALID_DATA = -2;
-static CONSTEXPR int SMBERR_END_OF_STREAM = -3;
-static CONSTEXPR int SMBERR_UNKNOWN_TYPE = -4;
+static SMBIOS_CONSTEXPR int SMBERR_OK = 0;
+static SMBIOS_CONSTEXPR int SMBERR_INVALID_ARGUMENT = -1;
+static SMBIOS_CONSTEXPR int SMBERR_INVALID_DATA = -2;
+static SMBIOS_CONSTEXPR int SMBERR_END_OF_STREAM = -3;
+static SMBIOS_CONSTEXPR int SMBERR_UNKNOWN_TYPE = -4;
 
 enum EntryType
 {
@@ -367,22 +367,77 @@ enum SpecVersion
 
 struct ParserContext
 {
+	// Pointer to extarnal buffer containing the SMBIOS data
 	const uint8_t *data;
+	// Total size of the SMBIOS data
+	size_t size;
+	// Pointer to the current byte in the SMBIOS data
 	const uint8_t *ptr;
 	// Pointer to the entry start
 	const uint8_t *estart;
-	// Pointer to the entry end (one past the last byte of the entry)
+	// Pointer to one byte past the last byte of the entry
 	const uint8_t *eend;
-	size_t size;
-	int version;
+	// Selected SMBIOS version
+	enum SpecVersion sversion;
+	// Original SMBIOS version
+	enum SpecVersion oversion;
+	// Content of the current SMBIOS entry
 	struct Entry entry;
+	// true if parsing failed (cannot be reset)
 	bool failed;
 };
 
-int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, int version );
+/**
+ * Initialize the SMBIOS parser
+ *
+ * @param context Parser context.
+ * @param data SMBIOS data.
+ * @param size Size of the SMBIOS data.
+ * @param version Preferred SMBIOS version. If the actual version of the SMBIOS data is smaller than this version,
+ *    the parser will use the version of the SMBIOS data. Valid values are the one defined in enum 'SpecVersion'.
+ * @return SMBERR_OK on success or a negative error code.
+ */
+int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, enum SpecVersion version );
+
+/**
+ * Get the next SMBIOS entry.
+ *
+ * Calling this function invalidates the previously returned entry.
+ *
+ * @param context Parser context.
+ * @param entry Pointer to the entry.
+ * @return SMBERR_OK on success or a negative error code.
+ */
 int smbios_next(struct ParserContext *context, const struct Entry **entry);
+
+/**
+ * Reset the SMBIOS parser and let it start from the beginning.
+ *
+ * If the parser failed (e.g. invalid SMBIOS data), calling this function will fail too.
+ *
+ * @param context Parser context.
+ * @return SMBERR_OK on success or a negative error code.
+ */
 int smbios_reset(struct ParserContext * context);
-int smbios_get_version(struct ParserContext *context);
+
+/**
+ * Get the selected SMBIOS version.
+ *
+ * @param context Parser context.
+ * @param selected Selected version used to parse the SMBIOS data.
+ * @param original Version of the SMBIOS data.
+ * @return SMBERR_OK on success or a negative error code.
+ */
+int smbios_get_version(struct ParserContext *context, enum SpecVersion *selected, enum SpecVersion *original);
+
+/**
+ * Get a string from the SMBIOS entry.
+ *
+ * @param entry SMBIOS entry.
+ * @param index Index of the string, starting from 1.
+ * @return String associated with the index or NULL in case of error.
+ */
+const char *smbios_get_string( const struct Entry *entry, int index );
 
 #ifdef _cplusplus
 } // namespace smbios
@@ -390,4 +445,4 @@ int smbios_get_version(struct ParserContext *context);
 
 #undef SMBIOS_STRING
 
-#endif // DMI_PARSER_H
+#endif // SMBIOS_PARSER_H

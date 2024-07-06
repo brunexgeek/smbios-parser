@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Bruno Ribeiro
+ * Copyright 2019-2024 Bruno Costa
  * https://github.com/brunexgeek/smbios-parser
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -97,7 +97,10 @@ static void hexdump( FILE *output, const uint8_t *buffer, size_t size )
 
 bool printSMBIOS( struct ParserContext *parser, FILE *output )
 {
-    int version = smbios_get_version(parser);
+    enum SpecVersion version;
+    if (smbios_get_version(parser, &version, NULL) != SMBERR_OK)
+        return false;
+
     const struct Entry *entry = NULL;
     while (true)
     {
@@ -272,14 +275,8 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
             {
                 fprintf(output, "Count: %d\n", (int) entry->data.oemstrings.Count);
                 fputs("\tStrings:\n", output);
-                const char *ptr = entry->data.oemstrings.Values;
-                int c = entry->data.oemstrings.Count;
-                while (ptr != NULL && *ptr != 0 && c > 0) // TODO: replace with 'smbios_get_string'
-                {
-                    fprintf(output, "\t\t%s\n", ptr);
-                    while (*ptr != 0) ++ptr;
-                    ++ptr;
-                }
+                for (int i = 0; i < entry->data.oemstrings.Count; ++i)
+                    fprintf(output, "\t\t%s\n", smbios_get_string(entry, i));
             }
             fputs("\n", output);
         }
@@ -410,9 +407,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         {
             fputs("\tHeader and data:\n", output);
             if (entry->length > 0)
-            {
                 hexdump(output, entry->rawdata, entry->length);
-            }
 
             const char *str = entry->strings;
             if (*str != 0)
