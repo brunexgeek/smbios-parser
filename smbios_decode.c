@@ -234,9 +234,9 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
             }
             if (version >= SMBIOS_3_0)
             {
-                fprintf(output, "\t CoreCount2: %d\n", entry->data.processor.CoreCount2);
-                fprintf(output, "\t CoreEnabled2: %d\n", entry->data.processor.CoreEnabled2);
-                fprintf(output, "\t ThreadCount2: %d\n", entry->data.processor.ThreadCount2);
+                fprintf(output, "\tCoreCount2: %d\n", entry->data.processor.CoreCount2);
+                fprintf(output, "\tCoreEnabled2: %d\n", entry->data.processor.CoreEnabled2);
+                fprintf(output, "\tThreadCount2: %d\n", entry->data.processor.ThreadCount2);
             }
             fputs("\n", output);
         }
