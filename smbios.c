@@ -150,17 +150,63 @@ static uint8_t read_uint8(struct ParserContext *context)
 
 static uint16_t read_uint16(struct ParserContext *context)
 {
-    return read_uint8(context) | (read_uint8(context) << 8);
+    if (context->ptr + 2 >= context->eend)
+    {
+        context->failed = true;
+        return 0;
+    }
+
+    #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        uint16_t value = context->ptr[0] | ((uint16_t)context->ptr[1] << 8);
+    #else
+        uint16_t value = ((uint16_t)context->ptr[0] << 8) | context->ptr[1];
+    #endif
+
+    context->ptr += 2;
+    return value;
 }
 
 static uint32_t read_uint32(struct ParserContext *context)
 {
-    return read_uint16(context) | ((uint32_t)read_uint16(context) << 16);
+    if (context->ptr + 4 >= context->eend)
+    {
+        context->failed = true;
+        return 0;
+    }
+
+    uint32_t value = 0;
+    for (int i = 0; i < 4; ++i)
+    {
+        #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        value |= context->ptr[i] << (i * 8);
+        #else
+        value |= context->ptr[i] << ((3 - i) * 8);
+        #endif
+    }
+    context->ptr += 4;
+    return value;
 }
 
 static uint64_t read_uint64(struct ParserContext *context)
 {
-    return read_uint32(context) | ((uint64_t)read_uint32(context) << 32);
+    if (context->ptr + 8 >= context->eend)
+    {
+        context->failed = true;
+        return 0;
+    }
+
+    uint64_t value = 0;
+    for (int i = 0; i < 8; ++i)
+    {
+        #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        value |= context->ptr[i] << (i * 8);
+        #else
+        value |= context->ptr[i] << ((7 - i) * 8);
+        #endif
+    }
+
+    context->ptr += 8;
+    return value;
 }
 
 static void parse_bios_info(struct ParserContext *context)
