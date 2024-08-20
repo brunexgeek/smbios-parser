@@ -31,7 +31,7 @@ static SMBIOS_CONSTEXPR size_t SMBIOS_ENTRY_HEADER_SIZE = 4;
 
 #include <Windows.h>
 
-struct RawSMBIOSData
+typedef struct RawSMBIOSData
 {
 	BYTE    Used20CallingMethod;
 	BYTE    SMBIOSMajorVersion;
@@ -39,7 +39,7 @@ struct RawSMBIOSData
 	BYTE    DmiRevision;
 	DWORD   Length;
 	BYTE    SMBIOSTableData[];
-};
+} RawSMBIOSData;
 #endif
 
 int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, enum SpecVersion version )
@@ -92,7 +92,8 @@ int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t
     else
         return SMBERR_INVALID_DATA;
     #else
-    RawSMBIOSData *smBiosData = nullptr;
+
+    RawSMBIOSData *smBiosData = NULL;
     smBiosData = (RawSMBIOSData *) data;
 
     // get the SMBIOS version

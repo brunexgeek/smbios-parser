@@ -24,20 +24,21 @@
 
 #include <Windows.h>
 
-static bool getDMI( std::vector<uint8_t> &buffer )
+static bool get_dmi_data(uint8_t** buffer, size_t* size)
 {
     const BYTE byteSignature[] = { 'B', 'M', 'S', 'R' };
     const DWORD signature = *((DWORD*)byteSignature);
 
     // get the size of SMBIOS table
-    DWORD size = GetSystemFirmwareTable(signature, 0, NULL, 0);
-    if (size == 0) return false;
-    buffer.resize(size, 0);
-    // retrieve the SMBIOS table
+    const DWORD tableSize = GetSystemFirmwareTable(signature, 0, NULL, 0);
+    if (tableSize == 0) return false;
 
-    if (size != GetSystemFirmwareTable(Signature, 0, buffer.data(), size))
-    {
-        buffer.clear();
+    *buffer = (uint8_t*)malloc(tableSize);
+    *size = (size_t)tableSize;
+
+    // retrieve the SMBIOS table
+    if (tableSize != GetSystemFirmwareTable(signature, 0, *buffer, tableSize)) {
+        free(*buffer); *buffer = NULL; *size = 0;
         return false;
     }
 
@@ -46,7 +47,7 @@ static bool getDMI( std::vector<uint8_t> &buffer )
 
 #else
 
-static bool get_dmi_data( const char *path, uint8_t **buffer, size_t *size )
+static bool get_dmi_data(uint8_t **buffer, size_t *size, const char* path)
 {
     FILE *input;
     char fileName[128];
@@ -58,21 +59,29 @@ static bool get_dmi_data( const char *path, uint8_t **buffer, size_t *size )
         return false;
     *size = (size_t) info.st_size + 32;
     *buffer = (uint8_t*) malloc(*size);
-    if (*buffer == NULL)
+    if (*buffer == NULL) {
+        free(*buffer); *buffer = NULL; *size = 0;
         return false;
+    }
 
     // read SMBIOS structures
     input = fopen(fileName, "rb");
-    if (input == NULL)
+    if (input == NULL) {
+        free(*buffer); *buffer = NULL; *size = 0;
         return false;
+    }
+
     fread((char*) *buffer + 32, (size_t) info.st_size, 1, input);
     fclose(input);
 
     // read SMBIOS entry point
     snprintf(fileName, sizeof(fileName), "%s/smbios_entry_point", path);
     input = fopen(fileName, "rb");
-    if (input == NULL)
+    if (input == NULL) {
+        free(*buffer); *buffer = NULL; *size = 0;
         return false;
+    }
+
     fread((char*) *buffer, 32, 1, input);
     fclose(input);
 
@@ -265,7 +274,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
                 fprintf(output, "\tUse: %d\n", (int) entry->data.physmem.Use);
                 fprintf(output, "\tNumberDevices: %d\n", entry->data.physmem.NumberDevices);
                 fprintf(output, "\tMaximumCapacity: %d KiB\n", entry->data.physmem.MaximumCapacity);
-                fprintf(output, "\tExtMaximumCapacity: %ld KiB\n", entry->data.physmem.ExtendedMaximumCapacity);
+                fprintf(output, "\tExtMaximumCapacity: %llu KiB\n", entry->data.physmem.ExtendedMaximumCapacity);
             }
             fputs("\n", output);
         }
@@ -330,8 +339,8 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
             }
             if (version >= SMBIOS_2_7)
             {
-                fprintf(output, "\tExtendedStartingAddress: %lX\n", entry->data.mamaddr.ExtendedStartingAddress);
-                fprintf(output, "\tExtendedEndingAddress: %lX\n", entry->data.mamaddr.ExtendedEndingAddress);
+                fprintf(output, "\tExtendedStartingAddress: %llX\n", entry->data.mamaddr.ExtendedStartingAddress);
+                fprintf(output, "\tExtendedEndingAddress: %llX\n", entry->data.mamaddr.ExtendedEndingAddress);
             }
             fputs("\n", output);
         }
@@ -350,8 +359,8 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
             }
             if (version >= SMBIOS_2_7)
             {
-                fprintf(output, "\tExtendedStartingAddress: %ld\n", entry->data.mdmaddr.ExtendedStartingAddress);
-                fprintf(output, "\tExtendedEndingAddress: %ld\n", entry->data.mdmaddr.ExtendedEndingAddress);
+                fprintf(output, "\tExtendedStartingAddress: %llu\n", entry->data.mdmaddr.ExtendedStartingAddress);
+                fprintf(output, "\tExtendedEndingAddress: %llu\n", entry->data.mdmaddr.ExtendedEndingAddress);
             }
             fputs("\n", output);
         }
@@ -469,7 +478,7 @@ int main(int argc, char ** argv)
     if (argc == 2)
         path = argv[1];
     printf("Using SMBIOS tables from %s\n", path);
-    result = get_dmi_data(path, &buffer, &size);
+    result = get_dmi_data(&buffer, &size, path);
 
     #endif
 
