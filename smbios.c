@@ -20,7 +20,7 @@
 
 #define VALID_VERSION(x) (((x) >= SMBIOS_2_0 && (x) <= SMBIOS_2_8) || (x) == SMBIOS_3_0)
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 namespace smbios {
 #endif
 
@@ -92,8 +92,9 @@ int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t
     else
         return SMBERR_INVALID_DATA;
     #else
-    RawSMBIOSData *smBiosData = nullptr;
-    smBiosData = (RawSMBIOSData *) data;
+
+    struct RawSMBIOSData *smBiosData = NULL;
+    smBiosData = (struct RawSMBIOSData*) data;
 
     // get the SMBIOS version
     context->oversion = smBiosData->SMBIOSMajorVersion << 8 | smBiosData->SMBIOSMinorVersion;
@@ -722,6 +723,6 @@ int smbios_get_version(struct ParserContext *context, enum SpecVersion *selected
     return SMBERR_OK;
 }
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 } // namespace smbios
 #endif
