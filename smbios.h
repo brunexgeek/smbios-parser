@@ -36,14 +36,14 @@
 	#define SMBIOS_EXPORT                  __attribute__ ((visibility("default")))
 #endif
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 #define SMBIOS_CONSTEXPR constexpr
 #else
 #include <stdbool.h>
 #define SMBIOS_CONSTEXPR const
 #endif
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 namespace smbios {
 #endif
 
@@ -468,7 +468,7 @@ SMBIOS_EXPORT int smbios_get_version(struct ParserContext *context, enum SpecVer
  */
 SMBIOS_EXPORT const char *smbios_get_string( const struct Entry *entry, int index );
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 } // namespace smbios
 #endif
 
