@@ -50,9 +50,31 @@ The pointer to the current SMBIOS entry is stored in the variable specified as t
 
 * **type**: Entry type, as defined in the SMBIOS specification;
 * **handle**: Entry handle, a unique 16-bit number in the range 0 to 0FFFEh (for version 2.0) or 0 to 0FEFFh (for version 2.1 and later);
-* **data**: Union with the actual formatted data of the entry for each supported type. For example, the `ProcessorInfo` entry is stored in the `data.processor` field.
+* **data**: Union with the actual formatted data of the entry for each supported type. Supported types are listed in the `EntryType` enumeration. The table bellow shows the supported types and the corresponding field in the `data` union. If the entry type is not supported, you can still read the data from `rawdata` field.
+* **rawdata**: Raw SMBIOS data of the entry (header and data itself).
+* **length**: Length of the SMBIOS data in `rawdata` field.
 * **strings**: Pointer to the start of the string table;
 * **string_count**: Number of strings in the string table.
+
+|Type|Field|
+|---|---|
+|TYPE_BIOS_INFO | bios_info |
+|TYPE_SYSTEM_INFO | system_info |
+|TYPE_BASEBOARD_INFO | baseboard_info |
+|TYPE_SYSTEM_ENCLOSURE | system_enclosure |
+|TYPE_PROCESSOR_INFO | processor_info |
+|TYPE_PORT_CONNECTOR | port_connector |
+|TYPE_SYSTEM_SLOT | system_slot |
+|TYPE_OEM_STRINGS | oem_strings |
+|TYPE_PHYSICAL_MEMORY_ARRAY | physical_memory_array |
+|TYPE_MEMORY_DEVICE | memory_device |
+|TYPE_MEMORY_ARRAY_MAPPED_ADDRESS | memory_array_mapped_address |
+|TYPE_MEMORY_DEVICE_MAPPED_ADDRESS | memory_device_mapped_address |
+|TYPE_SYSTEM_BOOT_INFO | system_boot_info |
+|TYPE_MANAGEMENT_DEVICE | management_device |
+|TYPE_MANAGEMENT_DEVICE_COMPONENT | management_device_component |
+|TYPE_MANAGEMENT_DEVICE_THRESHOLD_DATA | management_device_threshold_data |
+|TYPE_ONBOARD_DEVICES_EXTENDED_INFO | onboard_devices_extended_info |
 
 The library do not make heap allocations: everything is done in-place using the provided SMBIOS buffer and the context.
 
