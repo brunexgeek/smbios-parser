@@ -97,7 +97,7 @@ static void hexdump( FILE *output, const uint8_t *buffer, size_t size )
 
 bool printSMBIOS( struct ParserContext *parser, FILE *output )
 {
-    enum SpecVersion version;
+    int version;
     if (smbios_get_version(parser, &version, NULL) != SMBERR_OK)
         return false;
 

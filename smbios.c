@@ -42,7 +42,7 @@ struct RawSMBIOSData
 };
 #endif
 
-int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, enum SpecVersion version )
+int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, int version )
 {
     // we need at least the smbios header for now
     if (size < SMBIOS_HEADER_SIZE)
@@ -87,7 +87,7 @@ int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t
             return SMBERR_INVALID_DATA;
 
         // get the SMBIOS version
-        context->oversion = data[7] << 8 | data[8];
+        context->oversion = (data[7] << 8 | data[8]);
     }
     else
         return SMBERR_INVALID_DATA;
@@ -755,7 +755,7 @@ int smbios_next(struct ParserContext *context, const struct Entry **entry)
     return parse_entry(context, entry);
 }
 
-int smbios_get_version(struct ParserContext *context, enum SpecVersion *selected, enum SpecVersion *original)
+int smbios_get_version(struct ParserContext *context, int *selected, int *original)
 {
     if (context == NULL)
         return SMBERR_INVALID_ARGUMENT;

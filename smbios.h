@@ -29,10 +29,12 @@
 #endif
 
 #undef SMBIOS_EXPORT
-#ifdef SMBIOS_WINDOWS
-	#define SMBIOS_EXPORT                  __declspec(dllexport)
-#else
-	#define SMBIOS_EXPORT                  __attribute__ ((visibility("default")))
+#ifdef LIB_EXPORT
+	#ifdef SMBIOS_WINDOWS
+		#define SMBIOS_EXPORT                  __declspec(dllexport)
+	#else
+		#define SMBIOS_EXPORT                  __attribute__ ((visibility("default")))
+	#endif
 #endif
 
 #ifdef __cplusplus
@@ -40,10 +42,6 @@
 #else
 #include <stdbool.h>
 #define SMBIOS_CONSTEXPR const
-#endif
-
-#ifdef __cplusplus
-namespace smbios {
 #endif
 
 static SMBIOS_CONSTEXPR int SMBERR_OK = 0;
@@ -393,7 +391,7 @@ enum SpecVersion
 	SMBIOS_2_6 = 0x0206,
 	SMBIOS_2_7 = 0x0207,
 	SMBIOS_2_8 = 0x0208,
-	SMBIOS_3_0 = 0x0300
+	SMBIOS_3_0 = 0x0300,
 };
 
 struct ParserContext
@@ -409,9 +407,9 @@ struct ParserContext
 	// Pointer to one byte past the last byte of the entry
 	const uint8_t *eend;
 	// Selected SMBIOS version
-	enum SpecVersion sversion;
+	int sversion;
 	// Original SMBIOS version
-	enum SpecVersion oversion;
+	int oversion;
 	// Content of the current SMBIOS entry
 	struct Entry entry;
 	// true if parsing failed (cannot be reset)
@@ -436,7 +434,7 @@ extern "C" {
  * @param version Preferred SMBIOS version.
  * @return SMBERR_OK on success or a negative error code.
  */
-SMBIOS_EXPORT int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, enum SpecVersion version );
+SMBIOS_EXPORT int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, int version );
 
 /**
  * Get the next SMBIOS entry.
@@ -467,7 +465,7 @@ SMBIOS_EXPORT int smbios_reset(struct ParserContext * context);
  * @param original (optional) Version of the SMBIOS data.
  * @return SMBERR_OK on success or a negative error code.
  */
-SMBIOS_EXPORT int smbios_get_version(struct ParserContext *context, enum SpecVersion *selected, enum SpecVersion *original);
+SMBIOS_EXPORT int smbios_get_version(struct ParserContext *context, int *selected, int *original);
 
 /**
  * Returns a string from the SMBIOS entry.
