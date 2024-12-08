@@ -418,10 +418,9 @@ struct ParserContext
 	bool failed;
 };
 
-
 #ifdef __cplusplus
 extern "C" {
-#endif // __cplusplus
+#endif
 
 /**
  * Initialize the SMBIOS parser.
@@ -493,8 +492,7 @@ SMBIOS_EXPORT int smbios_get_version(struct ParserContext *context, enum SpecVer
 SMBIOS_EXPORT const char *smbios_get_string( const struct Entry *entry, int index );
 
 #ifdef __cplusplus
-}
-} // namespace smbios
+} // extern "C"
 #endif
 
 #undef SMBIOS_STRING
