@@ -84,7 +84,7 @@ The following functions are available. If you're using the library in a C++ code
 
 ### smbios_initialize
 
-`int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, enum SpecVersion version )`
+`int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t size, int version )`
 
 Initialize the SMBIOS parser.
 
@@ -124,7 +124,7 @@ The function returns SMBERR_OK on success or a negative error code.
 
 ### smbios_get_version
 
-`int smbios_get_version(struct ParserContext *context, enum SpecVersion *selected, enum SpecVersion *original)`
+`int smbios_get_version(struct ParserContext *context, int *selected, int *original)`
 
 Returns the selected and/or the original SMBIOS versions.
 
