@@ -153,4 +153,4 @@ The function returns the string associated with the given index or `NULL` in cas
 
 ## License
 
-The library and the compiler are distributed under [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+The library is distributed under [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
