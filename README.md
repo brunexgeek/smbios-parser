@@ -32,12 +32,12 @@ int main(int argc, char *argv[])
 
     // initialize the parser (the desired SMBIOS version is 3.0)
     struct ParserContext context;
-    if (smbios_init(&context, data, size, SMBIOS_3_0) != SMBERR_OK)
+    if (smbios_initialize(&context, data, size, SMBIOS_3_0) != SMBERR_OK)
         return 1;
 
     // iterate over the SMBIOS entries
     const struct Entry *entry = NULL;
-    while (smbios_parse(&context, &entry) == SMBERR_OK)
+    while (smbios_next(&context, &entry) == SMBERR_OK)
     {
         // do something with the current entry
     }
