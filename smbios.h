@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef SMBIOS_PARSER_H
-#define SMBIOS_PARSER_H
+#pragma once
 
 #define SMBIOS_STRING(name)  uint8_t name##_; const char * name
 
@@ -51,7 +50,6 @@ static SMBIOS_CONSTEXPR int SMBERR_OK = 0;
 static SMBIOS_CONSTEXPR int SMBERR_INVALID_ARGUMENT = -1;
 static SMBIOS_CONSTEXPR int SMBERR_INVALID_DATA = -2;
 static SMBIOS_CONSTEXPR int SMBERR_END_OF_STREAM = -3;
-static SMBIOS_CONSTEXPR int SMBERR_UNKNOWN_TYPE = -4;
 
 enum EntryType
 {
@@ -76,18 +74,19 @@ enum EntryType
 
 struct BiosInfo
 {
+	// 2.0+
 	SMBIOS_STRING(Vendor);
 	SMBIOS_STRING(BIOSVersion);
-	uint16_t BIOSStartingSegment;
+	uint16_t BIOSStartingAddressSegment;
 	SMBIOS_STRING(BIOSReleaseDate);
 	uint8_t BIOSROMSize;
 	uint8_t BIOSCharacteristics[8];
-	uint8_t ExtensionByte1;
-	uint8_t ExtensionByte2;
+	// 2.4+
+	uint8_t BIOSCharacteristicsExtensionBytes[2];
 	uint8_t SystemBIOSMajorRelease;
 	uint8_t SystemBIOSMinorRelease;
-	uint8_t EmbeddedFirmwareMajorRelease;
-	uint8_t EmbeddedFirmwareMinorRelease;
+	uint8_t EmbeddedControlerFirmwareMajorRelease;
+	uint8_t EmbeddedControlerFirmwareMinorRelease;
 };
 
 struct SystemInfo
@@ -117,7 +116,7 @@ struct BaseboardInfo
 	SMBIOS_STRING(LocationInChassis);
 	uint16_t ChassisHandle;
 	uint8_t BoardType;
-	uint8_t NoOfContainedObjectHandles;
+	uint8_t NumberOfContainedObjectHandles;
 	uint16_t *ContainedObjectHandles;
 };
 
@@ -335,31 +334,51 @@ struct OnboardDevicesExtendedInfo
 
 struct Entry
 {
+	// Entry type, as defined in the SMBIOS specification.
     uint8_t type;
+
+	// Length of the entry (SMBIOS header and data).
 	uint8_t length;
+
+	/**
+	 * Entry handle, a unique 16-bit number in the range 0 to 0FFFEh (for version 2.0)
+	 * or 0 to 0FEFFh (for version 2.1 and later).
+	 */
 	uint16_t handle;
+
+	/**
+	 * Union with the actual formatted data of the entry for each supported type. Supported types
+	 * are listed in the `EntryType` enumeration. If the entry type is not supported, you can still
+	 * read the data from `rawdata` field.
+	 */
     union
     {
-        struct ProcessorInfo processor;
-        struct BaseboardInfo baseboard;
-        struct SystemInfo sysinfo;
-        struct BiosInfo bios;
-        struct SystemEnclosure sysenclosure;
-        struct PhysicalMemoryArray physmem;
-        struct MemoryDevice memory;
-		struct SystemSlot sysslot;
-		struct OemStrings oemstrings;
-		struct PortConnector portconn;
-		struct MemoryArrayMappedAddress mamaddr;
-		struct MemoryDeviceMappedAddress mdmaddr;
-		struct SystemBootInfo bootinfo;
-		struct ManagementDevice mdev;
-		struct ManagementDeviceComponent mdcom;
-		struct ManagementDeviceThresholdData mdtdata;
-		struct OnboardDevicesExtendedInfo odeinfo;
+		struct BiosInfo bios_info;
+		struct SystemInfo system_info;
+		struct BaseboardInfo baseboard_info;
+		struct SystemEnclosure system_enclosure;
+		struct ProcessorInfo processor_info;
+		struct PortConnector port_connector;
+		struct SystemSlot system_slot;
+		struct OemStrings oem_strings;
+		struct PhysicalMemoryArray physical_memory_array;
+		struct MemoryDevice memory_device;
+		struct MemoryArrayMappedAddress memory_array_mapped_address;
+		struct MemoryDeviceMappedAddress memory_device_mapped_address;
+		struct SystemBootInfo system_boot_info;
+		struct ManagementDevice management_device;
+		struct ManagementDeviceComponent management_device_component;
+		struct ManagementDeviceThresholdData management_device_threshold_data;
+		struct OnboardDevicesExtendedInfo onboard_devices_extended_info;
     } data;
+
+	// Raw SMBIOS data of the entry (header and data itself).
 	const uint8_t *rawdata;
+
+	// Pointer to the start of the string table;
 	const char *strings;
+
+	// Number of strings in the string table.
 	int string_count;
 };
 
@@ -476,4 +495,4 @@ SMBIOS_EXPORT const char *smbios_get_string( const struct Entry *entry, int inde
 #undef SMBIOS_WINDOWS
 #undef SMBIOS_EXPORT
 
-#endif // SMBIOS_PARSER_H
+
