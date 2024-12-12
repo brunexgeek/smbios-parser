@@ -382,6 +382,7 @@ struct Entry
 
 enum SpecVersion
 {
+	SMBIOS_ANY = 0,
 	SMBIOS_2_0 = 0x0200,
 	SMBIOS_2_1 = 0x0201,
 	SMBIOS_2_2 = 0x0202,

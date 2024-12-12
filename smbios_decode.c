@@ -101,6 +101,8 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
     if (smbios_get_version(parser, &version, NULL) != SMBERR_OK)
         return false;
 
+    fprintf(output, "SMBIOS version %d.%d\n", version >> 8, version & 0xFF);
+
     const struct Entry *entry = NULL;
     while (true)
     {
@@ -480,7 +482,7 @@ int main(int argc, char ** argv)
     }
 
     struct ParserContext parser;
-    if (smbios_initialize(&parser, buffer, size, SMBIOS_3_0) == SMBERR_OK)
+    if (smbios_initialize(&parser, buffer, size, SMBIOS_ANY) == SMBERR_OK)
         printSMBIOS(&parser, stdout);
     else
         fputs("Invalid SMBIOS data", stderr);
