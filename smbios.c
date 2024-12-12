@@ -50,7 +50,7 @@ int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t
 
     memset(context, 0, sizeof(struct ParserContext));
     context->ptr = NULL;
-    context->sversion = VALID_VERSION(version) ? SMBIOS_3_0 : version;
+    context->sversion = VALID_VERSION(version) ? version : SMBIOS_3_0;
 
     // we have a valid SMBIOS entry point?
     #ifndef _WIN32
@@ -102,10 +102,12 @@ int smbios_initialize(struct ParserContext *context, const uint8_t *data, size_t
     context->size = smBiosData->Length;
     #endif
 
-    if (!VALID_VERSION(context->oversion))
-        return SMBERR_INVALID_DATA;
     if (context->sversion > context->oversion)
+    {
+        if (!VALID_VERSION(context->oversion))
+            return SMBERR_INVALID_DATA;
         context->sversion = context->oversion;
+    }
 
     return SMBERR_OK;
 }

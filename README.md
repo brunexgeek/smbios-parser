@@ -76,11 +76,11 @@ The pointer to the current SMBIOS entry is stored in the variable specified as t
 |TYPE_MANAGEMENT_DEVICE_THRESHOLD_DATA | management_device_threshold_data |
 |TYPE_ONBOARD_DEVICES_EXTENDED_INFO | onboard_devices_extended_info |
 
-The library do not make heap allocations: everything is done in-place using the provided SMBIOS buffer and the context.
+The library do not make heap allocations; everything is done in-place using the provided SMBIOS buffer and the context.
 
 ## API
 
-The following functions are available. If you're using the library in a C++ code, the functions will be defined in the `smbios` namespace.
+The following functions are available.
 
 ### smbios_initialize
 
@@ -93,7 +93,7 @@ If the actual version of the SMBIOS data is smaller than the value of the parame
 * **context**: Parser context.
 * **data**: SMBIOS data.
 * **size**: Size of the SMBIOS data.
-* **version**: Preferred SMBIOS version.
+* **version**: Preferred SMBIOS version. If set with `SMBIOS_ANY`, the latest version will be used (currently 3.0).
 
 The function returns SMBERR_OK on success or a negative error code.
 
