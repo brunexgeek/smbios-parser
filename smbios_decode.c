@@ -97,23 +97,26 @@ static void hexdump( FILE *output, const uint8_t *buffer, size_t size )
 
 bool printSMBIOS( struct ParserContext *parser, FILE *output )
 {
-    int version;
-    if (smbios_get_version(parser, &version, NULL) != SMBERR_OK)
+    int sversion, oversion;
+    if (smbios_get_version(parser, &sversion, &oversion) != SMBERR_OK)
         return false;
 
-    fprintf(output, "SMBIOS version %d.%d\n", version >> 8, version & 0xFF);
+    fprintf(output, "Selected version: %d.%d\n", sversion >> 8, sversion & 0xFF);
+    fprintf(output, "  SMBIOS version: %d.%d\n", oversion >> 8, oversion & 0xFF);
 
     const struct Entry *entry = NULL;
+    int result = 0;
     while (true)
     {
-        if (smbios_next(parser, &entry) != SMBERR_OK)
+        result = smbios_next(parser, &entry);
+        if (result != SMBERR_OK)
             break;
 
         fprintf(output, "Handle 0x%04X, DMI type %d, %d bytes\n", (int) entry->handle, (int) entry->type, (int) entry->length);
 
         if (entry->type == TYPE_BIOS_INFO)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tVendor: %s\n", entry->data.bios_info.Vendor);
                 fprintf(output, "\tBIOSVersion: %s\n", entry->data.bios_info.BIOSVersion);
@@ -121,7 +124,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
                 fprintf(output, "\tBIOSReleaseDate: %s\n", entry->data.bios_info.BIOSReleaseDate);
                 fprintf(output, "\tBIOSROMSize: %d KiB\n", ((int) entry->data.bios_info.BIOSROMSize + 1) * 64);
             }
-            if (version >= SMBIOS_2_4)
+            if (sversion >= SMBIOS_2_4)
             {
                 fprintf(output, "\tSystemBIOSMajorRelease: %d\n", (int) entry->data.bios_info.SystemBIOSMajorRelease);
                 fprintf(output, "\tSystemBIOSMinorRelease: %d\n", (int) entry->data.bios_info.SystemBIOSMinorRelease);
@@ -133,21 +136,21 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_SYSTEM_INFO)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tManufacturer: %s\n", entry->data.system_info.Manufacturer);
                 fprintf(output, "\tProductName: %s\n", entry->data.system_info.ProductName);
                 fprintf(output, "\tVersion: %s\n", entry->data.system_info.Version);
                 fprintf(output, "\tSerialNumber: %s\n", entry->data.system_info.SerialNumber);
             }
-            if (version >= SMBIOS_2_1)
+            if (sversion >= SMBIOS_2_1)
             {
                 fputs("\tUUID:", output);
                 for (int i = 0; i < 16; ++i)
                     fprintf(output, " %02X", entry->data.system_info.UUID[i]);
                 fputs("\n", output);
             }
-            if (version >= SMBIOS_2_4)
+            if (sversion >= SMBIOS_2_4)
             {
                 fprintf(output, "\tSKUNumber: %s\n", entry->data.system_info.SKUNumber);
                 fprintf(output, "\tFamily: %s\n", entry->data.system_info.Family);
@@ -157,7 +160,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_BASEBOARD_INFO)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tManufacturer: %s\n", entry->data.baseboard_info.Manufacturer);
                 fprintf(output, "\tProduct Name: %s\n", entry->data.baseboard_info.Product);
@@ -173,19 +176,19 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_SYSTEM_ENCLOSURE)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tManufacturer: %s\n", entry->data.system_enclosure.Manufacturer);
                 fprintf(output, "\tVersion: %s\n", entry->data.system_enclosure.Version);
                 fprintf(output, "\tSerialNumber: %s\n", entry->data.system_enclosure.SerialNumber);
                 fprintf(output, "\tAssetTag: %s\n", entry->data.system_enclosure.AssetTag);
             }
-            if (version >= SMBIOS_2_3)
+            if (sversion >= SMBIOS_2_3)
             {
                 fprintf(output, "\tContainedCount: %d\n", (int) entry->data.system_enclosure.ContainedElementCount);
                 fprintf(output, "\tContainedLength: %d\n", (int) entry->data.system_enclosure.ContainedElementRecordLength);
             }
-            if (version >= SMBIOS_2_7)
+            if (sversion >= SMBIOS_2_7)
             {
                 fprintf(output, "\tSKUNumber: %s\n", entry->data.system_enclosure.SKUNumber);
             }
@@ -194,7 +197,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_PROCESSOR_INFO)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tSocketDesignation: %s\n", entry->data.processor_info.SocketDesignation);
                 fprintf(output, "\tProcessorType: %d\n", (int) entry->data.processor_info.ProcessorType);
@@ -212,29 +215,29 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
                 fprintf(output, "\tStatus: %d\n", entry->data.processor_info.Status);
                 fprintf(output, "\tProcessorUpgrade: %d\n", entry->data.processor_info.ProcessorUpgrade);
             }
-            if (version >= SMBIOS_2_1)
+            if (sversion >= SMBIOS_2_1)
             {
                 fprintf(output, "\tL1CacheHandle: %d\n", entry->data.processor_info.L1CacheHandle);
                 fprintf(output, "\tL2CacheHandle: %d\n", entry->data.processor_info.L2CacheHandle);
                 fprintf(output, "\tL3CacheHandle: %d\n", entry->data.processor_info.L3CacheHandle);
             }
-            if (version >= SMBIOS_2_3)
+            if (sversion >= SMBIOS_2_3)
             {
                 fprintf(output, "\tSerialNumber: %s\n", entry->data.processor_info.SerialNumber);
                 fprintf(output, "\tAssetTagNumber: %s\n", entry->data.processor_info.AssetTagNumber);
                 fprintf(output, "\tPartNumber: %s\n", entry->data.processor_info.PartNumber);
             }
-            if (version >= SMBIOS_2_3)
+            if (sversion >= SMBIOS_2_3)
             {
                 fprintf(output, "\tSerialNumber: %s\n", entry->data.processor_info.SerialNumber);
                 fprintf(output, "\tAssetTagNumber: %s\n", entry->data.processor_info.AssetTagNumber);
                 fprintf(output, "\tPartNumber: %s\n", entry->data.processor_info.PartNumber);
             }
-            if (version >= SMBIOS_2_6)
+            if (sversion >= SMBIOS_2_6)
             {
                 fprintf(output, "\tProcessorFamily2: %d\n", entry->data.processor_info.ProcessorFamily2);
             }
-            if (version >= SMBIOS_3_0)
+            if (sversion >= SMBIOS_3_0)
             {
                 fprintf(output, "\tCoreCount2: %d\n", entry->data.processor_info.CoreCount2);
                 fprintf(output, "\tCoreEnabled2: %d\n", entry->data.processor_info.CoreEnabled2);
@@ -245,14 +248,14 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_SYSTEM_SLOT)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tSlotDesignation: %s\n", entry->data.system_slot.SlotDesignation);
                 fprintf(output, "\tSlotType: %d\n", (int) entry->data.system_slot.SlotType);
                 fprintf(output, "\tSlotDataBusWidth: %d\n", (int) entry->data.system_slot.SlotDataBusWidth);
                 fprintf(output, "\tSlotID: %d\n", (int) entry->data.system_slot.SlotID);
             }
-            if (version >= SMBIOS_2_6)
+            if (sversion >= SMBIOS_2_6)
             {
                 fprintf(output, "\tSegmentGroupNumber: %d\n", entry->data.system_slot.SegmentGroupNumber);
                 fprintf(output, "\tBusNumber: %d\n", (int) entry->data.system_slot.BusNumber);
@@ -262,7 +265,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_PHYSICAL_MEMORY_ARRAY)
         {
-            if (version >= SMBIOS_2_1)
+            if (sversion >= SMBIOS_2_1)
             {
                 fprintf(output, "\tUse: %d\n", (int) entry->data.physical_memory_array.Use);
                 fprintf(output, "\tNumberDevices: %d\n", entry->data.physical_memory_array.NumberDevices);
@@ -274,12 +277,12 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_MEMORY_DEVICE)
         {
-            if (version >= SMBIOS_2_1)
+            if (sversion >= SMBIOS_2_1)
             {
                 fprintf(output, "\tDeviceLocator: %s\n", entry->data.memory_device.DeviceLocator);
                 fprintf(output, "\tBankLocator: %s\n", entry->data.memory_device.BankLocator);
             }
-            if (version >= SMBIOS_2_3)
+            if (sversion >= SMBIOS_2_3)
             {
                 fprintf(output, "\tSpeed: %d MHz\n", entry->data.memory_device.Speed);
                 fprintf(output, "\tManufacturer: %s\n", entry->data.memory_device.Manufacturer);
@@ -289,7 +292,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
                 fprintf(output, "\tSize: %d MiB\n", entry->data.memory_device.Size);
                 fprintf(output, "\tExtendedSize: %d MiB\n", entry->data.memory_device.ExtendedSize);
             }
-            if (version >= SMBIOS_2_7)
+            if (sversion >= SMBIOS_2_7)
             {
                 fprintf(output, "\tConfiguredClockSpeed: %d\n", entry->data.memory_device.ConfiguredClockSpeed);
             }
@@ -298,7 +301,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_OEM_STRINGS)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "Count: %d\n", (int) entry->data.oem_strings.Count);
                 fputs("\tStrings:\n", output);
@@ -310,7 +313,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_PORT_CONNECTOR)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tInternalReferenceDesignator: %s\n", entry->data.port_connector.InternalReferenceDesignator);
                 fprintf(output, "\tInternalConnectorType: %d\n", (int) entry->data.port_connector.InternalConnectorType);
@@ -323,14 +326,14 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_MEMORY_ARRAY_MAPPED_ADDRESS)
         {
-            if (version >= SMBIOS_2_1)
+            if (sversion >= SMBIOS_2_1)
             {
                 fprintf(output, "\tStartingAddress: %0X\n", entry->data.memory_array_mapped_address.StartingAddress);
                 fprintf(output, "\tEndingAddress: %0X\n", entry->data.memory_array_mapped_address.EndingAddress);
                 fprintf(output, "\tMemoryArrayHandle: %0X\n", entry->data.memory_array_mapped_address.MemoryArrayHandle);
                 fprintf(output, "\tPartitionWidth: %0X\n", (int) entry->data.memory_array_mapped_address.PartitionWidth);
             }
-            if (version >= SMBIOS_2_7)
+            if (sversion >= SMBIOS_2_7)
             {
                 fprintf(output, "\tExtendedStartingAddress: %lX\n", entry->data.memory_array_mapped_address.ExtendedStartingAddress);
                 fprintf(output, "\tExtendedEndingAddress: %lX\n", entry->data.memory_array_mapped_address.ExtendedEndingAddress);
@@ -340,7 +343,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_MEMORY_DEVICE_MAPPED_ADDRESS)
         {
-            if (version >= SMBIOS_2_1)
+            if (sversion >= SMBIOS_2_1)
             {
                 fprintf(output, "\tStartingAddress: %d\n", entry->data.memory_device_mapped_address.StartingAddress);
                 fprintf(output, "\tEndingAddress: %d\n", entry->data.memory_device_mapped_address.EndingAddress);
@@ -350,7 +353,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
                 fprintf(output, "\tInterleavePosition: %d\n", (int) entry->data.memory_device_mapped_address.InterleavePosition);
                 fprintf(output, "\tInterleavedDataDepth: %d\n", (int) entry->data.memory_device_mapped_address.InterleavedDataDepth);
             }
-            if (version >= SMBIOS_2_7)
+            if (sversion >= SMBIOS_2_7)
             {
                 fprintf(output, "\tExtendedStartingAddress: %ld\n", entry->data.memory_device_mapped_address.ExtendedStartingAddress);
                 fprintf(output, "\tExtendedEndingAddress: %ld\n", entry->data.memory_device_mapped_address.ExtendedEndingAddress);
@@ -360,7 +363,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_MANAGEMENT_DEVICE)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tDescription: %s\n", entry->data.management_device.Description);
                 fprintf(output, "\tType: %d\n", (int) entry->data.management_device.Type);
@@ -372,7 +375,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_MANAGEMENT_DEVICE_COMPONENT)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tDescription: %s\n", entry->data.management_device_component.Description);
                 fprintf(output, "\tManagementDeviceHandle: %d\n", (int) entry->data.management_device_component.ManagementDeviceHandle);
@@ -384,7 +387,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_MANAGEMENT_DEVICE_THRESHOLD_DATA)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tLowerThresholdNonCritical: %d\n", entry->data.management_device_threshold_data.LowerThresholdNonCritical);
                 fprintf(output, "\tUpperThresholdNonCritical: %d\n", entry->data.management_device_threshold_data.UpperThresholdNonCritical);
@@ -398,7 +401,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_ONBOARD_DEVICES_EXTENDED_INFO)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tReferenceDesignation: %s\n", entry->data.onboard_devices_extended_info.ReferenceDesignation);
                 fprintf(output, "\tDeviceType: %d\n", (int) entry->data.onboard_devices_extended_info.DeviceType);
@@ -412,7 +415,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
         else
         if (entry->type == TYPE_SYSTEM_BOOT_INFO)
         {
-            if (version >= SMBIOS_2_0)
+            if (sversion >= SMBIOS_2_0)
             {
                 fprintf(output, "\tBootStatus:\n\t\t");
                 if ((entry->length - 10) > 0)
@@ -450,6 +453,11 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
 
             fputs("\n", output);
         }
+    }
+
+    if (result != SMBERR_END_OF_STREAM)
+    {
+        fputs("Invalid SMBIOS data", output);
     }
 
     return true;
