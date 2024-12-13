@@ -35,6 +35,8 @@
 	#else
 		#define SMBIOS_EXPORT                  __attribute__ ((visibility("default")))
 	#endif
+#else
+        #define SMBIOS_EXPORT
 #endif
 
 #ifdef __cplusplus
