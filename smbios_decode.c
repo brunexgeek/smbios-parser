@@ -24,24 +24,20 @@
 
 #include <Windows.h>
 
-static bool getDMI( std::vector<uint8_t> &buffer )
+static bool get_dmi_data( uint8_t **buffer, size_t *size )
 {
     const BYTE byteSignature[] = { 'B', 'M', 'S', 'R' };
     const DWORD signature = *((DWORD*)byteSignature);
 
     // get the size of SMBIOS table
-    DWORD size = GetSystemFirmwareTable(signature, 0, NULL, 0);
-    if (size == 0) return false;
-    buffer.resize(size, 0);
-    // retrieve the SMBIOS table
-
-    if (size != GetSystemFirmwareTable(Signature, 0, buffer.data(), size))
-    {
-        buffer.clear();
+    *size = GetSystemFirmwareTable(signature, 0, NULL, 0);
+    if (*size == 0)
         return false;
-    }
-
-    return true;
+    *buffer = (uint8_t*) malloc(*size);
+    if (*buffer == NULL)
+        return false;
+    // retrieve the SMBIOS table
+    return (*size == GetSystemFirmwareTable(signature, 0, *buffer, *size))
 }
 
 #else
