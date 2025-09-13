@@ -26,14 +26,18 @@ int main(int argc, char *argv[])
     // Get SMBIOS information using a custom function.
     // An example in C for Windows and Linux can be found
     // in 'smbios_decode.c'.
-    const uint8_t *data = NULL;
+    uint8_t *data = NULL;
     size_t size = 0;
-    load_smbios_data(&data, &size);
+    if (!get_dmi_data("/sys/firmware/dmi/tables", &data, &size))
+        return 1;
 
     // initialize the parser (the desired SMBIOS version is 3.0)
     struct ParserContext context;
     if (smbios_initialize(&context, data, size, SMBIOS_3_0) != SMBERR_OK)
+    {
+        free(data);
         return 1;
+    }
 
     // iterate over the SMBIOS entries
     const struct Entry *entry = NULL;
@@ -41,6 +45,8 @@ int main(int argc, char *argv[])
     {
         // do something with the current entry
     }
+
+    free(data);
 
     return 0;
 }
