@@ -1,0 +1,16 @@
+name: Compilation on GNU/Linux
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: dependencies
+      run: sudo apt-get install cmake make gcc
+    - name: Prepare
+      run: cmake .
+    - name: Compilation
+      run: make

@@ -1,0 +1,14 @@
+name: Compilation on Windows
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Prepare
+      run: cmake .
+    - name: Compilation
+      run: make
