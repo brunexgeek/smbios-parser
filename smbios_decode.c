@@ -306,7 +306,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
                 fprintf(output, "Count: %d\n", (int) entry->data.oem_strings.Count);
                 fputs("\tStrings:\n", output);
                 for (int i = 0; i < entry->data.oem_strings.Count; ++i)
-                    fprintf(output, "\t\t%s\n", smbios_get_string(entry, i));
+                    fprintf(output, "\t\t\"%s\"\n", smbios_get_string(entry, i));
             }
             fputs("\n", output);
         }
@@ -445,7 +445,7 @@ bool printSMBIOS( struct ParserContext *parser, FILE *output )
                 fputs("\tStrings:\n", output);
                 while (*str != 0)
                 {
-                    fprintf(output, "\t\t%s\n", str);
+                    fprintf(output, "\t\t\"%s\"\n", str);
                     while (*str != 0) ++str;
                     ++str;
                 }

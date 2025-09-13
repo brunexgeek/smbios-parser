@@ -694,9 +694,6 @@ static int parse_entry(struct ParserContext *context, const struct Entry **entry
         case TYPE_ONBOARD_DEVICES_EXTENDED_INFO:
             parse_onboard_devices_extended_info(context);
             break;
-        default:
-            // we have an unrecognized entry
-            return SMBERR_OK;
     }
 
     if (context->failed)
