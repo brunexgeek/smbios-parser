@@ -11,4 +11,4 @@ jobs:
     - name: Prepare
       run: cmake .
     - name: Compilation
-      run: make
+      run: make smbios_decode
