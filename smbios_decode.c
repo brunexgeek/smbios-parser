@@ -37,7 +37,12 @@ static bool get_dmi_data( uint8_t **buffer, size_t *size )
     if (*buffer == NULL)
         return false;
     // retrieve the SMBIOS table
-    return (*size == GetSystemFirmwareTable(signature, 0, *buffer, *size))
+    if (*size != GetSystemFirmwareTable(signature, 0, *buffer, *size))
+    {
+        free(*buffer);
+        return false;
+    }
+    return true;
 }
 
 #else
@@ -60,7 +65,10 @@ static bool get_dmi_data( const char *path, uint8_t **buffer, size_t *size )
     // read SMBIOS structures
     input = fopen(fileName, "rb");
     if (input == NULL)
+    {
+        free(*buffer);
         return false;
+    }
     fread((char*) *buffer + 32, (size_t) info.st_size, 1, input);
     fclose(input);
 
@@ -68,7 +76,10 @@ static bool get_dmi_data( const char *path, uint8_t **buffer, size_t *size )
     snprintf(fileName, sizeof(fileName), "%s/smbios_entry_point", path);
     input = fopen(fileName, "rb");
     if (input == NULL)
+    {
+        free(*buffer);
         return false;
+    }
     fread((char*) *buffer, 32, 1, input);
     fclose(input);
 
@@ -481,7 +492,7 @@ int main(int argc, char ** argv)
 
     if (!result)
     {
-        fputs("Unable to open SMBIOS tables", stderr);
+        fputs("Unable to open SMBIOS tables\n", stderr);
         return 1;
     }
 
@@ -489,7 +500,7 @@ int main(int argc, char ** argv)
     if (smbios_initialize(&parser, buffer, size, SMBIOS_ANY) == SMBERR_OK)
         printSMBIOS(&parser, stdout);
     else
-        fputs("Invalid SMBIOS data", stderr);
+        fputs("Invalid SMBIOS data\n", stderr);
 
     free(buffer);
     return 0;
