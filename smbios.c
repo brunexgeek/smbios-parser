@@ -20,10 +20,6 @@
 
 #define VALID_VERSION(x) (((x) >= SMBIOS_2_0 && (x) <= SMBIOS_2_8) || (x) == SMBIOS_3_0)
 
-#ifdef __cplusplus
-namespace smbios {
-#endif
-
 static SMBIOS_CONSTEXPR size_t SMBIOS_HEADER_SIZE = 32;
 static SMBIOS_CONSTEXPR size_t SMBIOS_ENTRY_HEADER_SIZE = 4;
 
@@ -768,6 +764,3 @@ int smbios_get_version(struct ParserContext *context, int *selected, int *origin
     return SMBERR_OK;
 }
 
-#ifdef __cplusplus
-} // namespace smbios
-#endif
