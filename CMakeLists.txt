@@ -25,7 +25,7 @@ set_target_properties(smbios_static PROPERTIES
     PREFIX "lib" )
 
 add_library(smbios_shared SHARED "smbios.c")
-add_compile_definitions(smbios_shared LIB_EXPORT)
+target_compile_definitions(smbios_shared PRIVATE LIB_EXPORT)
 target_include_directories(smbios_shared PUBLIC "include")
 set_target_properties(smbios_shared PROPERTIES
     OUTPUT_NAME "smbios"
