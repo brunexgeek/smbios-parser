@@ -88,6 +88,42 @@ static bool get_dmi_data( const char *path, uint8_t **buffer, size_t *size )
 
 #endif
 
+static bool read_from_file(const char *filename, uint8_t **buffer, size_t *size)
+{
+    FILE *input = fopen(filename, "rb");
+    if (input == NULL)
+        return false;
+
+    // Get file size
+    fseek(input, 0, SEEK_END);
+    long file_size = ftell(input);
+    if (file_size < 0)
+    {
+        fclose(input);
+        return false;
+    }
+    *size = (size_t)file_size;
+    fseek(input, 0, SEEK_SET);
+
+    *buffer = (uint8_t*) malloc(*size);
+    if (*buffer == NULL)
+    {
+        fclose(input);
+        return false;
+    }
+
+    size_t bytes_read = fread(*buffer, 1, *size, input);
+    fclose(input);
+
+    if (bytes_read != *size)
+    {
+        free(*buffer);
+        return false;
+    }
+
+    return true;
+}
+
 static void hexdump( FILE *output, const uint8_t *buffer, size_t size )
 {
     size_t i = 0;
@@ -476,6 +512,14 @@ int main(int argc, char ** argv)
     size_t size = 0;
     bool result = false;
 
+    // Check if a file argument is provided
+    if (argc >= 2)
+    {
+        printf("Reading SMBIOS data from %s\n", argv[1]);
+        result = read_from_file(argv[1], &buffer, &size);
+    }
+    else
+    {
     #ifdef _WIN32
 
     result = get_dmi_data(&buffer, &size);
@@ -489,6 +533,7 @@ int main(int argc, char ** argv)
     result = get_dmi_data(path, &buffer, &size);
 
     #endif
+    }
 
     if (!result)
     {
